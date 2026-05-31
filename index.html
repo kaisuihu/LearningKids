@@ -18173,7 +18173,7 @@ const CHARS = {
   <!-- ===== Welcome Screen ===== -->
   <div id="welcome-screen" class="screen active">
     <button class="help-btn" onclick="showHelp()" title="使用说明">?</button>
-    <div class="browser-hint" id="browser-hint">建议用 Chrome 浏览器打开，语音效果最佳</div>
+    <div class="browser-hint" id="browser-hint">建议用 Chrome 或 Edge 浏览器打开，语音效果最佳</div>
     <div class="welcome-banner">🎓</div>
     <div class="welcome-title">小朋友的学习乐园</div>
     <div class="welcome-subtitle">选择一个游戏开始吧！</div>
@@ -18191,7 +18191,7 @@ const CHARS = {
         <span class="py-badge">aoe</span> 拼音小能手
       </button>
       <button class="btn" style="background:linear-gradient(135deg,#9B59B6,#E040FB)" onclick="showPhonicsMap()">
-        <span class="ph-badge">/eɪ/</span> 自然拼读
+        <span class="ph-badge">/æ/</span> 自然拼读
       </button>
     </div>
     <div class="voice-settings" id="voice-settings" style="display:none">
@@ -18202,15 +18202,24 @@ const CHARS = {
       <button onclick="previewVoice('zh')" style="font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;">🔊</button>
     </div>
     <div class="update-time" id="update-time"></div>
-    <button class="changelog-btn" onclick="var c=document.getElementById('changelog');c.style.display=c.style.display==='block'?'none':'block'">📋 更新日志</button>
-    <div class="changelog-content" id="changelog">
-      <b>V1.0.0</b> 字母认读；数学加减法（100以内）、凑十拆十法；拼音拼读；汉字识字（幼儿园到六年级3500字）。<br>
-      <b>V1.0.1</b> 数学增加乘除法（九九乘法表）；数学增加计时模式和错题结果展示。<br>
-      <b>V1.0.2</b> 自然拼读（幼儿园到六年级1000+词汇）教学和小测，支持搜索和拼读规律筛选。
-    </div>
+    <button class="changelog-btn" onclick="document.getElementById('changelog-overlay').style.display='flex'">📋 更新日志</button>
   </div>
   <div id="map-screen" class="screen">
     <div class="map-title">🗺️ 冒险地图</div>
+
+<!-- ===== 更新日志弹窗 ===== -->
+<div id="changelog-overlay" class="help-overlay" onclick="this.style.display='none'" style="display:none">
+  <div class="help-modal" onclick="event.stopPropagation()">
+    <button class="help-close" onclick="document.getElementById('changelog-overlay').style.display='none'">✕</button>
+    <div class="help-title">📋 更新日志</div>
+    <div class="changelog-content" style="display:block;text-align:left;margin-top:0">
+      <b>V1.0.0</b> 字母认读；数学加减法（100以内）、凑十拆十法；拼音拼读；汉字识字（幼儿园到六年级3500字）。<br><br>
+      <b>V1.0.1</b> 数学增加乘除法（九九乘法表）；数学增加计时模式和错题结果展示。<br><br>
+      <b>V1.0.2</b> 自然拼读（幼儿园到六年级1000+词汇）教学和小测，支持搜索和拼读规律筛选。<br><br>
+      <b>V1.0.3</b> 自然拼读增加音标学习（48个国际音标），支持音标与单词发音对比学习。
+    </div>
+  </div>
+</div>
     <div class="map-subtitle">点击任意关卡，开始挑战！</div>
     <div class="endless-section" style="margin-bottom:20px">
       <div class="qty-row" style="margin-bottom:10px">
@@ -21165,7 +21174,7 @@ function clearPhErrors() {
   try { const u = new SpeechSynthesisUtterance(''); u.volume = 0; u.rate = 2; speechSynthesis.speak(u); } catch(e) {}
   // 首页底部更新时间（取文件修改时间）
   const el = document.getElementById('update-time');
-  if (el) el.textContent = 'V1.0.2 · 最后更新：2026-05-31 10:07:49';
+  if (el) el.textContent = 'V1.0.3 · 最后更新：2026-05-31 13:10:57';
   // 音色选择器
   function populateVoices() {
     ['en','zh'].forEach(lang => {
@@ -21214,7 +21223,7 @@ function clearPhErrors() {
       </div>
       <div class="help-section">
         <div class="help-h">/eɪ/ 自然拼读</div>
-        <div class="help-p">幼儿园到六年级 1000+ 词汇。教学模式下按年级学习单词发音和拼读规律，支持收藏。小测分得分/计时两种模式，可看单词选音标或看音标选单词。支持搜索和拼读规律筛选。</div>
+        <div class="help-p">幼儿园到六年级 1000+ 词汇。拼读教学按年级学习单词发音和拼读规律，支持收藏；音标学习涵盖 48 个国际音标；小测分得分/计时两种模式。支持搜索和拼读规律筛选。</div>
       </div>
     </div>
   </div>
