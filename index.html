@@ -18691,13 +18691,11 @@ function speak(text, callback, options = {}) {
 }
 
 function speakLetter(letter) {
-  const isUpper = letter === letter.toUpperCase();
-  speak(isUpper ? 'Uppercase ' + letter : 'Lowercase ' + letter, null, { rate: 0.75 });
+  speak(letter, null, { rate: 0.75 });
 }
 
 function speakOption(letter) {
-  const isUpper = letter === letter.toUpperCase();
-  speak(isUpper ? 'Uppercase ' + letter : 'Lowercase ' + letter, null, { rate: 0.55 });
+  speak(letter, null, { rate: 0.55 });
 }
 
 function speakChinese(text) {
@@ -19087,7 +19085,7 @@ function selectOption(idx) {
 
     // 语音播报正确答案
     const isUpper = correctLetter === correctLetter.toUpperCase();
-    speak('No. The answer is ' + (isUpper ? 'Uppercase ' : 'Lowercase ') + correctLetter, () => {
+    speak('No. The answer is ' + correctLetter, () => {
       if (gameState.currentScreen !== 'game') return;
       if (gameState.lives <= 0) {
         alert('哎呀，机会用完了！让我们再试一次吧！💪');
