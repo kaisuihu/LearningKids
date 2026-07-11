@@ -18623,7 +18623,7 @@ const CHARS = {
       <button class="tag-btn active" id="flash-phmode-score" onclick="setFlashPhMode('score')">得分</button>
       <button class="tag-btn" id="flash-phmode-timed" onclick="setFlashPhMode('timed')">计时</button>
     </div>
-    <div class="qty-row">
+    <div class="qty-row" id="flash-qty-row">
       <span class="qty-label">每轮题数：</span>
       <button class="qty-btn" onclick="setFlashQty(5)">5</button>
       <button class="qty-btn" onclick="setFlashQty(10)">10</button>
@@ -20932,7 +20932,7 @@ function updateFlashMapUI() {
   document.getElementById('flash-phmode-score').classList.toggle('active', flashState.phMode === 'score');
   document.getElementById('flash-phmode-timed').classList.toggle('active', flashState.phMode === 'timed');
   // 题数
-  document.querySelectorAll('#flash-map-screen .qty-row:last-of-type .qty-btn').forEach(function(b) {
+  document.querySelectorAll('#flash-qty-row .qty-btn').forEach(function(b) {
     b.classList.toggle('active', parseInt(b.textContent) === flashState.totalQuestions);
   });
 }
