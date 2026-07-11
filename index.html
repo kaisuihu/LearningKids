@@ -21448,7 +21448,7 @@ function _handleFlashOrderClick(idx) {
   if (optEls[idx].classList.contains('locked')) return;
 
   var clickedVal = optEls[idx].textContent;
-  var expectedVal = q.items[flashState.orderClicks];
+  var expectedVal = String(q.items[flashState.orderClicks]);
 
   if (clickedVal === expectedVal) {
     optEls[idx].classList.add('locked');
