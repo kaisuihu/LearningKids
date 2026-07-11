@@ -1,8 +1,8 @@
 # 小朋友的学习乐园
 
-单文件 HTML 网页游戏（~500KB），字母 + 数学 + 汉字 + 拼音 + 组词 + 自然拼读，适合幼儿互动学习。
+单文件 HTML 网页游戏（~500KB），字母 + 数学 + 汉字 + 拼音 + 组词 + 自然拼读 + 闪示训练，适合幼儿互动学习。
 
-## 六大模块
+## 七大模块
 
 ### 字母大冒险
 - 18 关，4 阶段：大写认读 → 小写认读 → 大小写配对 → 混合挑战
@@ -45,14 +45,27 @@
 - 所有交互用 data 属性 + 事件委托，innerHTML 重建后事件不丢失
 - localStorage keys: `phonics_qty`、`phonics_errors`、`phonics_bookmarks`、`phonics_progress`
 
+### 闪示训练
+- 数字/字母快速闪现，train 瞬时记忆和注意力
+- **数字模式**：数字记忆（1-6位）+ 算式运算（加减乘除，10/20/50/100 以内）
+- **字母模式**：1-6 个大写/小写/混合字母
+- 速度 0.2s~3.0s 可调（默认 0.5s），滑块 + 实时数值
+- **看谁记性好**（辨识模式）：闪现后从 4 个选项中选出看到的
+- **火眼金睛**（排序模式）：逐个闪现后按顺序点击（仅多内容可用）
+- 得分/计时双模式，5/10/15/20 题数
+- 排序模式：位置指示器 + 连续错 3 次跳题
+- completion：Canvas 纸屑 + 错题回顾
+- 所有交互用 data 属性 + 事件委托
+- localStorage keys: `flash_qty`/`flash_speed`/`flash_type`/`flash_digit_mode`/`flash_digit_length`/`flash_calc_op`/`flash_calc_range`/`flash_letter_count`/`flash_letter_case`/`flash_mode`/`flash_errors`
+
 ## 关键全局变量
-- `gameState` / `mathState` / `charState` / `wordState` / `pyState` / `phState`
+- `gameState` / `mathState` / `charState` / `wordState` / `pyState` / `phState` / `flashState`
 - `LEVELS` / `MATH_LEVELS` / `CHINESE_CHARS` / `CHAR_GRADES` / `WORD_BANK`
 - `PHONICS_WORDS` / `PHONICS_PATTERNS` / `PHONICS_GRADES` / `IPA_DATA`
 - `PY_INITIALS` / `PY_FINALS` / `PY_TONES` / `parsePinyin(py)`
 
 ## 技术要点
-- **纯单文件**，零外部依赖，~500KB，V1.0.3
+- **纯单文件**，零外部依赖，~500KB，V1.0.4
 - Web Speech API：英文 `lang='en-US'`，中文 `lang='zh-CN'`
 - 所有答题模块均用 data 属性 + 事件委托，避免 inline onclick 引号转义问题
 - 子元素用 `max-width` 约束，不用 `width:100%`，flex 居中自然生效
@@ -64,6 +77,9 @@
 - `char_qty` / `char_bookmarks`
 - `pinyin_qty`
 - `phonics_qty` / `phonics_errors` / `phonics_bookmarks` / `phonics_progress`
+- `flash_qty` / `flash_speed` / `flash_type` / `flash_digit_mode` / `flash_digit_length`
+- `flash_calc_op` / `flash_calc_range` / `flash_letter_count` / `flash_letter_case`
+- `flash_mode` / `flash_errors`
 - `preferred_voices`（已隐藏）
 
 ## Git 仓库

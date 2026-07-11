@@ -328,6 +328,15 @@ body {
 .qty-btn:hover { border-color: #FF7043; color: #FF7043; }
 .qty-btn.active { border-color: #FF7043; background: #FFF3E0; color: #FF7043; }
 
+/* 标签式按钮 —— 无固定宽度，适合文字较长的选项 */
+.tag-btn {
+  padding: 6px 14px; border-radius: 10px; border: 2px solid #e0e0e0;
+  background: white; font-size: 15px; font-weight: 700; color: #999;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.tag-btn:hover { border-color: #26C6DA; color: #26C6DA; }
+.tag-btn.active { border-color: #26C6DA; background: #E0F7FA; color: #00ACC1; }
+
 	/* ========== 汉字认读游戏 ========== */
 	.char-map-header { width: 100%; max-width: 650px; margin-bottom: 12px; }
 	.char-search-wrap { position: relative; margin-bottom: 6px; }
@@ -576,6 +585,52 @@ body {
 	.ph-quiz-opt.correct { border-color: #5CB85C; background: #C8E6C9; color: #2E7D32; }
 	.ph-quiz-opt.wrong { border-color: #E74C3C; background: #FFCDD2; color: #C62828; }
 	.ph-quiz-opt.disabled { pointer-events: none; opacity: 0.6; }
+
+	/* ===== 闪示训练 ===== */
+	.flash-stage {
+	  display: flex; align-items: center; justify-content: center;
+	  min-height: 200px; margin-bottom: 16px;
+	}
+	.flash-display-text {
+	  font-size: 96px; font-weight: 900; color: #26C6DA;
+	  transition: opacity 0.15s; opacity: 0;
+	}
+	.flash-display-text.visible { opacity: 1; }
+	.flash-display-text.smaller { font-size: 64px; }
+	.flash-ready-text {
+	  font-size: 28px; color: #999; font-weight: 700;
+	}
+	.flash-order-indicator {
+	  text-align: center; margin-bottom: 12px; font-size: 16px; color: #999;
+	  min-height: 24px;
+	}
+	.flash-order-indicator .flash-order-pos {
+	  display: inline-block; width: 32px; height: 32px; line-height: 32px;
+	  border-radius: 50%; background: #e0e0e0; color: #999; margin: 0 4px;
+	  font-size: 14px; font-weight: 700; transition: all 0.3s;
+	}
+	.flash-order-indicator .flash-order-pos.current {
+	  background: #26C6DA; color: #fff; transform: scale(1.2);
+	}
+	.flash-order-indicator .flash-order-pos.done {
+	  background: #5CB85C; color: #fff;
+	}
+	.flash-option {
+	  padding: 14px 10px; border-radius: 16px; border: 3px solid #e0e0e0;
+	  background: white; cursor: pointer; font-size: 20px; font-weight: 700;
+	  color: #555; transition: all 0.2s; text-align: center;
+	  box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+	}
+	.flash-option:hover { border-color: #26C6DA; transform: translateY(-2px); }
+	.flash-option.correct { border-color: #5CB85C; background: #C8E6C9; color: #2E7D32; }
+	.flash-option.wrong { border-color: #E74C3C; background: #FFCDD2; color: #C62828; animation: shake 0.4s; }
+	.flash-option.locked { pointer-events: none; border-color: #5CB85C; background: #C8E6C9; color: #2E7D32; }
+	.flash-option.disabled { pointer-events: none; opacity: 0.6; }
+	@keyframes shake {
+	  0%, 100% { transform: translateX(0); }
+	  25% { transform: translateX(-6px); }
+	  75% { transform: translateX(6px); }
+	}
 
 
 	/* ========== Responsive ========== */
@@ -18193,6 +18248,9 @@ const CHARS = {
       <button class="btn" style="background:linear-gradient(135deg,#9B59B6,#E040FB)" onclick="showPhonicsMap()">
         <span class="ph-badge">/æ/</span> 自然拼读
       </button>
+      <button class="btn" style="background:linear-gradient(135deg,#26C6DA,#00BCD4)" onclick="showFlashMap()">
+        <span>👁️</span> 闪示训练
+      </button>
     </div>
     <div class="voice-settings" id="voice-settings" style="display:none">
       <span class="voice-label">🎙️ 音色</span>
@@ -18460,6 +18518,132 @@ const CHARS = {
       <div class="complete-actions">
         <button class="btn btn-primary btn-sm" onclick="startPinyinGame(pyState.difficulty)">🔄 再来一轮</button>
         <button class="btn btn-purple btn-sm" onclick="showPinyinMap()">🔤 难度选择</button>
+        <button class="btn btn-blue btn-sm" onclick="showScreen('welcome')">🏠 返回首页</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Flash Training Map Screen ===== -->
+  <div id="flash-map-screen" class="screen">
+    <div class="map-title">👁️ 闪示训练</div>
+    <div class="map-subtitle">快速闪现，练眼力·记性好！</div>
+    <div class="math-mode-row" style="margin-bottom:12px">
+      <span class="qty-label">内容：</span>
+      <button class="tag-btn active" id="flash-type-digit" onclick="setFlashType('digit')">🔢 数字</button>
+      <button class="tag-btn" id="flash-type-letter" onclick="setFlashType('letter')">🔤 字母</button>
+    </div>
+    <!-- 数字设置 -->
+    <div id="flash-digit-settings">
+      <div class="math-mode-row" style="margin-bottom:8px">
+        <span class="qty-label">子模式：</span>
+        <button class="tag-btn active" id="flash-digitmode-memory" onclick="setFlashDigitMode('memory')">🔢 数字记忆</button>
+        <button class="tag-btn" id="flash-digitmode-calc" onclick="setFlashDigitMode('calc')">🧮 算式运算</button>
+      </div>
+      <div id="flash-digit-memory-opts">
+        <div class="qty-row" style="margin-bottom:8px">
+          <span class="qty-label">数字位数：</span>
+          <button class="qty-btn" onclick="setFlashDigitLen(1)">1</button>
+          <button class="qty-btn" onclick="setFlashDigitLen(2)">2</button>
+          <button class="qty-btn" onclick="setFlashDigitLen(3)">3</button>
+          <button class="qty-btn" onclick="setFlashDigitLen(4)">4</button>
+          <button class="qty-btn" onclick="setFlashDigitLen(5)">5</button>
+          <button class="qty-btn" onclick="setFlashDigitLen(6)">6</button>
+        </div>
+      </div>
+      <div id="flash-digit-calc-opts" style="display:none">
+        <div class="qty-row" style="margin-bottom:6px">
+          <span class="qty-label">运算：</span>
+          <button class="tag-btn" onclick="setFlashCalcOp('add')">➕ 加</button>
+          <button class="tag-btn" onclick="setFlashCalcOp('sub')">➖ 减</button>
+          <button class="tag-btn" onclick="setFlashCalcOp('mul')">✖️ 乘</button>
+          <button class="tag-btn" onclick="setFlashCalcOp('div')">➗ 除</button>
+        </div>
+        <div class="qty-row" style="margin-bottom:8px">
+          <span class="qty-label">范围：</span>
+          <button class="tag-btn" onclick="setFlashCalcRange(10)">10以内</button>
+          <button class="tag-btn" onclick="setFlashCalcRange(20)">20以内</button>
+          <button class="tag-btn" onclick="setFlashCalcRange(50)">50以内</button>
+          <button class="tag-btn" onclick="setFlashCalcRange(100)">100以内</button>
+        </div>
+      </div>
+    </div>
+    <!-- 字母设置 -->
+    <div id="flash-letter-settings" style="display:none">
+      <div class="qty-row" style="margin-bottom:6px">
+        <span class="qty-label">字母数量：</span>
+        <button class="qty-btn" onclick="setFlashLetterCount(1)">1</button>
+        <button class="qty-btn" onclick="setFlashLetterCount(2)">2</button>
+        <button class="qty-btn" onclick="setFlashLetterCount(3)">3</button>
+        <button class="qty-btn" onclick="setFlashLetterCount(4)">4</button>
+        <button class="qty-btn" onclick="setFlashLetterCount(5)">5</button>
+        <button class="qty-btn" onclick="setFlashLetterCount(6)">6</button>
+      </div>
+      <div class="qty-row" style="margin-bottom:8px">
+        <span class="qty-label">大小写：</span>
+        <button class="tag-btn" onclick="setFlashLetterCase('mixed')">Aa 混合</button>
+        <button class="tag-btn" onclick="setFlashLetterCase('upper')">A 大写</button>
+        <button class="tag-btn" onclick="setFlashLetterCase('lower')">a 小写</button>
+      </div>
+    </div>
+    <!-- 速度 -->
+    <div class="qty-row" style="margin-bottom:2px">
+      <span class="qty-label">闪现速度：</span>
+      <input type="range" id="flash-speed-slider" min="1" max="60" value="10" step="1" oninput="updateFlashSpeed()" style="width:140px;accent-color:#26C6DA">
+      <span class="qty-label" id="flash-speed-text" style="min-width:50px">0.50秒</span>
+    </div>
+    <!-- 游戏模式 -->
+    <div class="math-mode-row" style="margin-bottom:6px">
+      <span class="qty-label">模式：</span>
+      <button class="tag-btn active" id="flash-mode-identify" onclick="setFlashMode('identify')">🧠 记忆</button>
+      <button class="tag-btn" id="flash-mode-order" onclick="setFlashMode('order')">🔢 排序</button>
+    </div>
+    <!-- 题数 -->
+    <div class="math-mode-row" style="margin-bottom:6px">
+      <span class="qty-label">答题：</span>
+      <button class="tag-btn active" id="flash-phmode-score" onclick="setFlashPhMode('score')">得分</button>
+      <button class="tag-btn" id="flash-phmode-timed" onclick="setFlashPhMode('timed')">计时</button>
+    </div>
+    <div class="qty-row">
+      <span class="qty-label">每轮题数：</span>
+      <button class="qty-btn" onclick="setFlashQty(5)">5</button>
+      <button class="qty-btn" onclick="setFlashQty(10)">10</button>
+      <button class="qty-btn" onclick="setFlashQty(15)">15</button>
+      <button class="qty-btn" onclick="setFlashQty(20)">20</button>
+    </div>
+    <button class="btn btn-endless" onclick="startFlashGame()" style="margin-top:14px">🚀 开始挑战</button>
+    <br>
+    <button class="btn btn-purple btn-sm" style="margin-top:16px" onclick="showScreen('welcome')">🏠 返回首页</button>
+  </div>
+
+  <!-- ===== Flash Training Game Screen ===== -->
+  <div id="flash-game-screen" class="screen">
+    <div class="game-header">
+      <button class="game-back-btn" onclick="showFlashMap()">✕ 退出</button>
+      <div class="progress-bar-wrap"><div id="flash-progress-bar" class="progress-bar-fill" style="width:0%"></div></div>
+      <span class="progress-text" id="flash-progress-text">0/10</span>
+      <span class="progress-text" id="flash-score-text" style="color:#F5A623">0分</span>
+      <span class="math-timer" id="flash-timer" style="display:none"></span>
+      <button class="game-back-btn" id="flash-replay-btn" onclick="replayFlashContent()" style="display:none;border-color:#26C6DA;color:#26C6DA;margin-left:4px">👁️ 再看一次</button>
+    </div>
+    <div class="flash-stage" id="flash-stage">
+      <div class="flash-display-text" id="flash-display-text"></div>
+    </div>
+    <div class="flash-order-indicator" id="flash-order-indicator" style="display:none"></div>
+    <div class="options-grid" id="flash-options-grid"></div>
+    <div class="lives-display" id="flash-lives-display"></div>
+  </div>
+
+  <!-- ===== Flash Training Complete Screen ===== -->
+  <div id="flash-complete-screen" class="screen">
+    <div class="complete-container" style="text-align:center;margin:0 auto;max-width:500px">
+      <canvas id="flash-confetti-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1000"></canvas>
+      <div class="complete-stars" id="flash-complete-stars">⭐⭐⭐</div>
+      <div class="complete-title" id="flash-complete-title">太棒了！</div>
+      <div class="complete-score" id="flash-complete-score"></div>
+      <div class="wrong-list" id="flash-complete-wrong" style="display:none"></div>
+      <div class="complete-actions">
+        <button class="btn btn-primary btn-sm" onclick="startFlashGame()">🔄 再来一轮</button>
+        <button class="btn btn-purple btn-sm" onclick="showFlashMap()">👁️ 返回设置</button>
         <button class="btn btn-blue btn-sm" onclick="showScreen('welcome')">🏠 返回首页</button>
       </div>
     </div>
@@ -20583,6 +20767,741 @@ function backToPinyinMap() {
   showPinyinMap();
 }
 
+// ==================== 闪示训练 ====================
+var FLASH_QTY_KEY = 'flash_qty';
+var FLASH_SPEED_KEY = 'flash_speed';
+var FLASH_TYPE_KEY = 'flash_type';
+var FLASH_DIGIT_MODE_KEY = 'flash_digit_mode';
+var FLASH_DIGIT_LEN_KEY = 'flash_digit_length';
+var FLASH_CALC_OP_KEY = 'flash_calc_op';
+var FLASH_CALC_RANGE_KEY = 'flash_calc_range';
+var FLASH_LETTER_COUNT_KEY = 'flash_letter_count';
+var FLASH_LETTER_CASE_KEY = 'flash_letter_case';
+var FLASH_MODE_KEY = 'flash_mode';
+var FLASH_ERRORS_KEY = 'flash_errors';
+
+var flashState = {
+  type: 'digit',
+  mode: 'identify',
+  digitMode: 'memory',
+  digitLength: 1,
+  calcOp: 'add',
+  calcRange: 10,
+  letterCount: 1,
+  letterCase: 'mixed',
+  speed: 500,
+  totalQuestions: 10,
+  phMode: 'score',
+  currentQuestion: 0,
+  questions: [],
+  score: 0,
+  mistakes: 0,
+  startTime: 0,
+  timerInterval: null,
+  wrongMap: {},
+  orderClicks: 0,
+  orderErrors: 0
+};
+
+function loadFlashSettings() {
+  flashState.type = localStorage.getItem(FLASH_TYPE_KEY) || 'digit';
+  flashState.mode = localStorage.getItem(FLASH_MODE_KEY) || 'identify';
+  flashState.digitMode = localStorage.getItem(FLASH_DIGIT_MODE_KEY) || 'memory';
+  flashState.digitLength = parseInt(localStorage.getItem(FLASH_DIGIT_LEN_KEY)) || 1;
+  flashState.calcOp = localStorage.getItem(FLASH_CALC_OP_KEY) || 'add';
+  flashState.calcRange = parseInt(localStorage.getItem(FLASH_CALC_RANGE_KEY)) || 10;
+  flashState.letterCount = parseInt(localStorage.getItem(FLASH_LETTER_COUNT_KEY)) || 1;
+  flashState.letterCase = localStorage.getItem(FLASH_LETTER_CASE_KEY) || 'mixed';
+  flashState.speed = parseInt(localStorage.getItem(FLASH_SPEED_KEY)) || 500;
+  flashState.totalQuestions = parseInt(localStorage.getItem(FLASH_QTY_KEY)) || 10;
+}
+
+function saveFlashSetting(key, val) {
+  localStorage.setItem(key, val);
+}
+
+function showFlashMap() {
+  loadFlashSettings();
+  showScreen('flash-map');
+  updateFlashMapUI();
+}
+
+function updateFlashMapUI() {
+  // 类型Tab
+  document.getElementById('flash-type-digit').classList.toggle('active', flashState.type === 'digit');
+  document.getElementById('flash-type-letter').classList.toggle('active', flashState.type === 'letter');
+  // 数字/字母设置显隐
+  document.getElementById('flash-digit-settings').style.display = flashState.type === 'digit' ? '' : 'none';
+  document.getElementById('flash-letter-settings').style.display = flashState.type === 'letter' ? '' : 'none';
+  // 数字子模式
+  if (flashState.type === 'digit') {
+    document.getElementById('flash-digitmode-memory').classList.toggle('active', flashState.digitMode === 'memory');
+    document.getElementById('flash-digitmode-calc').classList.toggle('active', flashState.digitMode === 'calc');
+    document.getElementById('flash-digit-memory-opts').style.display = flashState.digitMode === 'memory' ? '' : 'none';
+    document.getElementById('flash-digit-calc-opts').style.display = flashState.digitMode === 'calc' ? '' : 'none';
+    // 位数按钮
+    document.querySelectorAll('#flash-digit-memory-opts .qty-btn').forEach(function(b) {
+      b.classList.toggle('active', parseInt(b.textContent) === flashState.digitLength);
+    });
+    // 运算按钮
+    var calcBtns = document.querySelectorAll('#flash-digit-calc-opts .qty-row:first-child .tag-btn');
+    var opMap = {'➕ 加':'add','➖ 减':'sub','✖️ 乘':'mul','➗ 除':'div'};
+    calcBtns.forEach(function(b) {
+      b.classList.toggle('active', opMap[b.textContent.trim()] === flashState.calcOp);
+    });
+    // 范围按钮
+    var rangeBtns = document.querySelectorAll('#flash-digit-calc-opts .qty-row:last-child .tag-btn');
+    rangeBtns.forEach(function(b) {
+      var r = parseInt(b.textContent);
+      b.classList.toggle('active', r === flashState.calcRange);
+    });
+  }
+  // 字母
+  if (flashState.type === 'letter') {
+    document.querySelectorAll('#flash-letter-settings .qty-row:first-child .qty-btn').forEach(function(b) {
+      b.classList.toggle('active', parseInt(b.textContent) === flashState.letterCount);
+    });
+    var caseMap = {'Aa 混合':'mixed','A 大写':'upper','a 小写':'lower'};
+    document.querySelectorAll('#flash-letter-settings .qty-row:last-child .tag-btn').forEach(function(b) {
+      b.classList.toggle('active', caseMap[b.textContent.trim()] === flashState.letterCase);
+    });
+  }
+  // 速度滑块
+  var speedVal = Math.round(flashState.speed / 50);
+  document.getElementById('flash-speed-slider').value = speedVal;
+  document.getElementById('flash-speed-text').textContent = (flashState.speed / 1000).toFixed(2) + '秒';
+  // 模式
+  document.getElementById('flash-mode-identify').classList.toggle('active', flashState.mode === 'identify');
+  document.getElementById('flash-mode-order').classList.toggle('active', flashState.mode === 'order');
+  var isMulti = (flashState.type === 'digit' && flashState.digitMode === 'memory' && flashState.digitLength > 1) ||
+                (flashState.type === 'letter' && flashState.letterCount > 1);
+  document.getElementById('flash-mode-order').style.display = isMulti ? '' : 'none';
+  if (!isMulti && flashState.mode === 'order') {
+    flashState.mode = 'identify';
+    document.getElementById('flash-mode-identify').classList.add('active');
+    document.getElementById('flash-mode-order').classList.remove('active');
+  }
+  // 得分/计时
+  document.getElementById('flash-phmode-score').classList.toggle('active', flashState.phMode === 'score');
+  document.getElementById('flash-phmode-timed').classList.toggle('active', flashState.phMode === 'timed');
+  // 题数
+  document.querySelectorAll('#flash-map-screen .qty-row:last-of-type .qty-btn').forEach(function(b) {
+    b.classList.toggle('active', parseInt(b.textContent) === flashState.totalQuestions);
+  });
+}
+
+function setFlashType(type) {
+  flashState.type = type;
+  saveFlashSetting(FLASH_TYPE_KEY, type);
+  updateFlashMapUI();
+}
+
+function setFlashDigitMode(mode) {
+  flashState.digitMode = mode;
+  saveFlashSetting(FLASH_DIGIT_MODE_KEY, mode);
+  updateFlashMapUI();
+}
+
+function setFlashDigitLen(n) {
+  flashState.digitLength = n;
+  saveFlashSetting(FLASH_DIGIT_LEN_KEY, n);
+  updateFlashMapUI();
+}
+
+function setFlashCalcOp(op) {
+  flashState.calcOp = op;
+  saveFlashSetting(FLASH_CALC_OP_KEY, op);
+  updateFlashMapUI();
+}
+
+function setFlashCalcRange(n) {
+  flashState.calcRange = n;
+  saveFlashSetting(FLASH_CALC_RANGE_KEY, n);
+  updateFlashMapUI();
+}
+
+function setFlashLetterCount(n) {
+  flashState.letterCount = n;
+  saveFlashSetting(FLASH_LETTER_COUNT_KEY, n);
+  updateFlashMapUI();
+}
+
+function setFlashLetterCase(c) {
+  flashState.letterCase = c;
+  saveFlashSetting(FLASH_LETTER_CASE_KEY, c);
+  updateFlashMapUI();
+}
+
+function updateFlashSpeed() {
+  var val = parseInt(document.getElementById('flash-speed-slider').value);
+  flashState.speed = val * 50;
+  saveFlashSetting(FLASH_SPEED_KEY, flashState.speed);
+  document.getElementById('flash-speed-text').textContent = (flashState.speed / 1000).toFixed(2) + '秒';
+}
+
+function setFlashMode(mode) {
+  flashState.mode = mode;
+  saveFlashSetting(FLASH_MODE_KEY, mode);
+  updateFlashMapUI();
+}
+
+function setFlashPhMode(mode) {
+  flashState.phMode = mode;
+  document.getElementById('flash-phmode-score').classList.toggle('active', mode === 'score');
+  document.getElementById('flash-phmode-timed').classList.toggle('active', mode === 'timed');
+}
+
+function setFlashQty(n) {
+  flashState.totalQuestions = n;
+  saveFlashSetting(FLASH_QTY_KEY, n);
+  updateFlashMapUI();
+}
+
+// 出题
+function generateFlashQuestions() {
+  var qs = [];
+  var total = flashState.totalQuestions;
+  for (var i = 0; i < total; i++) {
+    var q = {};
+    if (flashState.type === 'digit') {
+      if (flashState.digitMode === 'memory') {
+        q.type = 'digit-memory';
+        q.count = flashState.digitLength;
+        q.items = [];
+        for (var j = 0; j < flashState.digitLength; j++) {
+          q.items.push(Math.floor(Math.random() * 10));
+        }
+        q.display = q.items.join('');
+        q.answer = q.display;
+        q.target = parseInt(q.display);
+        // 生成4个干扰选项（同位数不同数字，保留前导零）
+        var distractors = new Set();
+        distractors.add(q.display);
+        while (distractors.size < 4) {
+          var d = '';
+          for (var jj = 0; jj < flashState.digitLength; jj++) {
+            d += Math.floor(Math.random() * 10);
+          }
+          distractors.add(d);
+        }
+        q.options = Array.from(distractors);
+        // 打乱
+        for (var k = q.options.length - 1; k > 0; k--) {
+          var r = Math.floor(Math.random() * (k + 1));
+          var tmp = q.options[k]; q.options[k] = q.options[r]; q.options[r] = tmp;
+        }
+        q.correctIdx = q.options.indexOf(q.display);
+      } else {
+        q.type = 'digit-calc';
+        q.calcOp = flashState.calcOp;
+        q.calcRange = flashState.calcRange;
+        var range = flashState.calcRange;
+        var a, b, ans;
+        if (flashState.calcOp === 'add') {
+          ans = Math.floor(Math.random() * range) + 1;
+          a = Math.floor(Math.random() * ans);
+          b = ans - a;
+        } else if (flashState.calcOp === 'sub') {
+          a = Math.floor(Math.random() * range) + 1;
+          b = Math.floor(Math.random() * (a + 1));
+          ans = a - b;
+        } else if (flashState.calcOp === 'mul') {
+          var maxFactor = Math.floor(Math.sqrt(range));
+          a = Math.floor(Math.random() * maxFactor) + 1;
+          b = Math.floor(Math.random() * maxFactor) + 1;
+          ans = a * b;
+          if (ans > range) { a = Math.floor(Math.random() * 5) + 1; b = Math.floor(Math.random() * 5) + 1; ans = a * b; }
+        } else {
+          b = Math.floor(Math.random() * Math.floor(Math.sqrt(range))) + 1;
+          ans = Math.floor(Math.random() * Math.floor(Math.sqrt(range))) + 1;
+          a = b * ans;
+          if (a > range) { b = Math.floor(Math.random() * 5) + 1; ans = Math.floor(Math.random() * 5) + 1; a = b * ans; }
+        }
+        var opSymbol = {'add':'+','sub':'−','mul':'×','div':'÷'}[flashState.calcOp];
+        q.display = a + ' ' + opSymbol + ' ' + b;
+        q.answer = ans;
+        q.a = a; q.b = b;
+        // 干扰项
+        var ds = new Set();
+        ds.add(ans);
+        while (ds.size < 4) {
+          var off = Math.floor(Math.random() * Math.max(5, Math.floor(range/3))) + 1;
+          if (Math.random() < 0.5) off = -off;
+          var d = ans + off;
+          if (d >= 0) ds.add(d);
+        }
+        q.options = Array.from(ds);
+        for (var k2 = q.options.length - 1; k2 > 0; k2--) {
+          var r2 = Math.floor(Math.random() * (k2 + 1));
+          var tmp2 = q.options[k2]; q.options[k2] = q.options[r2]; q.options[r2] = tmp2;
+        }
+        q.correctIdx = q.options.indexOf(ans);
+      }
+    } else {
+      // 字母模式
+      q.type = 'letter';
+      q.count = flashState.letterCount;
+      q.items = [];
+      var pool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      for (var j3 = 0; j3 < flashState.letterCount; j3++) {
+        var ch = pool[Math.floor(Math.random() * 26)];
+        if (flashState.letterCase === 'lower') {
+          ch = ch.toLowerCase();
+        } else if (flashState.letterCase === 'mixed') {
+          ch = Math.random() < 0.5 ? ch : ch.toLowerCase();
+        }
+        q.items.push(ch);
+      }
+      q.display = q.items.join(' ');
+      q.answer = q.display;
+      // 干扰项同样是字母组合
+      var dOptions = new Set();
+      dOptions.add(q.display);
+      while (dOptions.size < 4) {
+        var dItems = [];
+        for (var jj = 0; jj < flashState.letterCount; jj++) {
+          var dc = pool[Math.floor(Math.random() * 26)];
+          if (flashState.letterCase === 'lower') {
+            dc = dc.toLowerCase();
+          } else if (flashState.letterCase === 'mixed') {
+            dc = Math.random() < 0.5 ? dc : dc.toLowerCase();
+          }
+          dItems.push(dc);
+        }
+        dOptions.add(dItems.join(' '));
+      }
+      q.options = Array.from(dOptions);
+      for (var k3 = q.options.length - 1; k3 > 0; k3--) {
+        var r3 = Math.floor(Math.random() * (k3 + 1));
+        var tmp3 = q.options[k3]; q.options[k3] = q.options[r3]; q.options[r3] = tmp3;
+      }
+      q.correctIdx = q.options.indexOf(q.display);
+    }
+    qs.push(q);
+  }
+  return qs;
+}
+
+function startFlashGame() {
+  loadFlashSettings();
+  flashState.currentQuestion = 0;
+  flashState.score = 0;
+  flashState.mistakes = 0;
+  flashState.questions = generateFlashQuestions();
+  flashState.wrongMap = {};
+  flashState.orderClicks = 0;
+  flashState.orderErrors = 0;
+  showScreen('flash-game');
+  updateFlashProgress();
+  _showFlashQuestion();
+}
+
+function updateFlashProgress() {
+  var pct = (flashState.currentQuestion / flashState.totalQuestions) * 100;
+  document.getElementById('flash-progress-bar').style.width = pct + '%';
+  document.getElementById('flash-progress-text').textContent = flashState.currentQuestion + '/' + flashState.totalQuestions;
+  document.getElementById('flash-score-text').textContent = Math.round(flashState.score) + '分';
+  if (flashState.phMode === 'timed') {
+    document.getElementById('flash-timer').style.display = '';
+    document.getElementById('flash-score-text').style.display = 'none';
+    if (!flashState.timerInterval) {
+      flashState.startTime = Date.now();
+      flashState.timerInterval = setInterval(function() {
+        var elapsed = Math.floor((Date.now() - flashState.startTime) / 1000);
+        var minutes = Math.floor(elapsed / 60);
+        var seconds = elapsed % 60;
+        document.getElementById('flash-timer').textContent = '⏱ ' + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+      }, 200);
+    }
+  } else {
+    document.getElementById('flash-timer').style.display = 'none';
+    document.getElementById('flash-score-text').style.display = '';
+  }
+}
+
+function _showFlashQuestion() {
+  if (flashState.currentQuestion >= flashState.totalQuestions) {
+    _completeFlashGame();
+    return;
+  }
+  var q = flashState.questions[flashState.currentQuestion];
+  var stage = document.getElementById('flash-stage');
+  var display = document.getElementById('flash-display-text');
+  var optsGrid = document.getElementById('flash-options-grid');
+  var orderInd = document.getElementById('flash-order-indicator');
+  var replayBtn = document.getElementById('flash-replay-btn');
+
+  // 保存当前题目的内容用于重播
+  window._flashCurrentQ = q;
+
+  // 重置
+  optsGrid.innerHTML = '';
+  orderInd.style.display = 'none';
+  display.className = 'flash-display-text';
+  display.textContent = '';
+  replayBtn.style.display = 'none';
+  flashState.orderClicks = 0;
+  flashState.orderErrors = 0;
+
+  // 判断显示大小
+  var contentLen = q.display.length;
+  if (contentLen > 10) display.classList.add('smaller');
+  else if (contentLen > 5) display.classList.add('smaller');
+
+  if (flashState.mode === 'identify' || q.type === 'digit-calc') {
+    // 辨识模式：闪现内容 → 显示选项
+    // Step 1: 准备
+    display.innerHTML = '<span class="flash-ready-text">准备…</span>';
+    display.className = 'flash-display-text visible';
+    setTimeout(function() {
+      // Step 2: 闪现
+      display.className = 'flash-display-text';
+      if (contentLen > 10) display.classList.add('smaller');
+      display.innerHTML = '<span class="flash-ready-text">准备…</span>';
+      setTimeout(function() {
+        display.textContent = q.display;
+        display.className = 'flash-display-text visible';
+        if (contentLen > 10) display.classList.add('smaller');
+        setTimeout(function() {
+          // Step 3: 消失
+          display.className = 'flash-display-text';
+          setTimeout(function() {
+            display.textContent = '';
+            // Step 4: 显示选项
+            _renderFlashOptions(q);
+          }, 300);
+        }, flashState.speed);
+      }, 100);
+    }, 500);
+  } else {
+    // 排序模式：逐个闪现
+    display.innerHTML = '<span class="flash-ready-text">准备…</span>';
+    display.className = 'flash-display-text visible';
+    setTimeout(function() {
+      display.className = 'flash-display-text';
+      _flashSequence(q.items, 0, function() {
+        // 全部闪完，空屏
+        setTimeout(function() {
+          display.textContent = '';
+          // 生成打乱的选项
+          var shuffled = q.items.slice();
+          for (var i = shuffled.length - 1; i > 0; i--) {
+            var r = Math.floor(Math.random() * (i + 1));
+            var tmp = shuffled[i]; shuffled[i] = shuffled[r]; shuffled[r] = tmp;
+          }
+          q.shuffledOrder = shuffled;
+          _renderFlashOrderOptions(q);
+        }, 500);
+      });
+    }, 500);
+  }
+}
+
+function _flashSequence(items, idx, callback) {
+  if (idx >= items.length) { callback(); return; }
+  var display = document.getElementById('flash-display-text');
+  display.textContent = items[idx];
+  display.className = 'flash-display-text visible';
+  if (items[idx].length > 10) display.classList.add('smaller');
+  var replayBtn = document.getElementById('flash-replay-btn');
+  setTimeout(function() {
+    display.className = 'flash-display-text';
+    setTimeout(function() {
+      _flashSequence(items, idx + 1, callback);
+    }, 300);
+  }, flashState.speed);
+}
+
+function replayFlashContent() {
+  var q = window._flashCurrentQ;
+  if (!q) return;
+  speechSynth && speechSynth.cancel();
+  var display = document.getElementById('flash-display-text');
+  var optsGrid = document.getElementById('flash-options-grid');
+  var replayBtn = document.getElementById('flash-replay-btn');
+  replayBtn.style.display = 'none';
+  display.className = 'flash-display-text';
+  display.textContent = '';
+  optsGrid.innerHTML = '';
+
+  var contentLen = q.display.length;
+  if (flashState.mode === 'identify' || q.type === 'digit-calc') {
+    display.innerHTML = '<span class="flash-ready-text">再看一次…</span>';
+    display.className = 'flash-display-text visible';
+    setTimeout(function() {
+      display.className = 'flash-display-text';
+      if (contentLen > 10) display.classList.add('smaller');
+      display.innerHTML = '<span class="flash-ready-text">再看一次…</span>';
+      setTimeout(function() {
+        display.textContent = q.display;
+        display.className = 'flash-display-text visible';
+        if (contentLen > 10) display.classList.add('smaller');
+        setTimeout(function() {
+          display.className = 'flash-display-text';
+          setTimeout(function() {
+            display.textContent = '';
+            _renderFlashOptions(q);
+            document.getElementById('flash-replay-btn').style.display = '';
+          }, 300);
+        }, flashState.speed);
+      }, 100);
+    }, 500);
+  } else {
+    display.innerHTML = '<span class="flash-ready-text">再看一次…</span>';
+    display.className = 'flash-display-text visible';
+    setTimeout(function() {
+      display.className = 'flash-display-text';
+      var items = q.items;
+      _flashSequence(items, 0, function() {
+        setTimeout(function() {
+          display.textContent = '';
+          q.shuffledOrder = q.shuffledOrder || q.items.slice().sort(function() { return Math.random() - 0.5; });
+          _renderFlashOrderOptions(q);
+          document.getElementById('flash-replay-btn').style.display = '';
+        }, 500);
+      });
+    }, 500);
+  }
+}
+
+function _renderFlashOptions(q) {
+  var grid = document.getElementById('flash-options-grid');
+  grid.innerHTML = '';
+  q.options.forEach(function(opt, idx) {
+    var btn = document.createElement('div');
+    btn.className = 'flash-option';
+    btn.textContent = opt;
+    btn.setAttribute('data-flash-opt', idx);
+    grid.appendChild(btn);
+  });
+  // 显示重播按钮
+  document.getElementById('flash-replay-btn').style.display = '';
+}
+
+function _renderFlashOrderOptions(q) {
+  var grid = document.getElementById('flash-options-grid');
+  var orderInd = document.getElementById('flash-order-indicator');
+  grid.innerHTML = '';
+  // 显示位置指示
+  orderInd.style.display = '';
+  var posHtml = '';
+  for (var i = 0; i < q.count; i++) {
+    posHtml += '<span class="flash-order-pos' + (i === 0 ? ' current' : '') + '">' + (i + 1) + '</span>';
+  }
+  orderInd.innerHTML = posHtml;
+  // 渲染打乱后的选项
+  q.shuffledOrder.forEach(function(opt, idx) {
+    var btn = document.createElement('div');
+    btn.className = 'flash-option';
+    btn.textContent = opt;
+    btn.setAttribute('data-flash-order-opt', idx);
+    grid.appendChild(btn);
+  });
+  // 显示重播按钮
+  document.getElementById('flash-replay-btn').style.display = '';
+}
+
+function _handleFlashOptionClick(idx) {
+  var q = flashState.questions[flashState.currentQuestion];
+  if (!q) return;
+  var optEls = document.querySelectorAll('#flash-options-grid .flash-option');
+  if (!optEls || optEls.length === 0) return;
+  // 检查是否已禁用
+  if (optEls[0].classList.contains('disabled')) return;
+  // 禁用所有选项
+  optEls.forEach(function(el) { el.classList.add('disabled'); });
+
+  var isCorrect = (idx === q.correctIdx);
+  if (isCorrect) {
+    optEls[idx].classList.add('correct');
+    flashState.score += Math.round(100 / flashState.totalQuestions);
+    speakChinese('真棒！');
+    setTimeout(function() {
+      flashState.currentQuestion++;
+      updateFlashProgress();
+      _showFlashQuestion();
+    }, 1000);
+  } else {
+    optEls[idx].classList.add('wrong');
+    if (q.correctIdx >= 0 && q.correctIdx < optEls.length) {
+      optEls[q.correctIdx].classList.add('correct');
+    }
+    flashState.mistakes++;
+    var wrongKey = q.type + '|' + q.answer;
+    if (!flashState.wrongMap[wrongKey]) flashState.wrongMap[wrongKey] = 0;
+    flashState.wrongMap[wrongKey]++;
+    if (flashState.phMode === 'score') {
+      speakChinese('不对。答案是 ' + q.answer + '。');
+      setTimeout(function() {
+        flashState.currentQuestion++;
+        updateFlashProgress();
+        _showFlashQuestion();
+      }, 1800);
+    } else {
+      speakChinese('不对哦，再看看。');
+      setTimeout(function() {
+        optEls.forEach(function(el) { el.classList.remove('disabled'); el.classList.remove('wrong'); });
+        if (q.correctIdx >= 0 && q.correctIdx < optEls.length) optEls[q.correctIdx].classList.remove('correct');
+      }, 1500);
+    }
+  }
+}
+
+function _handleFlashOrderClick(idx) {
+  var q = flashState.questions[flashState.currentQuestion];
+  if (!q) return;
+  var optEls = document.querySelectorAll('#flash-options-grid .flash-option');
+  if (!optEls || optEls.length === 0) return;
+  // 检查是否已锁定
+  if (optEls[idx].classList.contains('locked')) return;
+
+  var clickedVal = optEls[idx].textContent;
+  var expectedVal = q.items[flashState.orderClicks];
+
+  if (clickedVal === expectedVal) {
+    optEls[idx].classList.add('locked');
+    // 更新位置指示
+    var posEls = document.querySelectorAll('#flash-order-indicator .flash-order-pos');
+    if (posEls[flashState.orderClicks]) {
+      posEls[flashState.orderClicks].classList.remove('current');
+      posEls[flashState.orderClicks].classList.add('done');
+    }
+    flashState.orderClicks++;
+    if (flashState.orderClicks < q.count) {
+      if (posEls[flashState.orderClicks]) posEls[flashState.orderClicks].classList.add('current');
+    }
+    if (flashState.orderClicks >= q.count) {
+      // 全部正确
+      flashState.score += Math.round(100 / flashState.totalQuestions);
+      speakChinese('真棒！全对了！');
+      setTimeout(function() {
+        flashState.currentQuestion++;
+        updateFlashProgress();
+        _showFlashQuestion();
+      }, 1000);
+    }
+  } else {
+    optEls[idx].classList.add('wrong');
+    flashState.orderErrors++;
+    setTimeout(function() {
+      optEls[idx].classList.remove('wrong');
+    }, 400);
+    if (flashState.orderErrors >= 3) {
+      flashState.mistakes++;
+      var wrongKey = q.type + '|' + q.items.join(' ');
+      if (!flashState.wrongMap[wrongKey]) flashState.wrongMap[wrongKey] = 0;
+      flashState.wrongMap[wrongKey]++;
+      speakChinese('错了3次。正确答案是 ' + q.items.join('、') + '。');
+      // 显示正确答案
+      optEls.forEach(function(el, i) { el.classList.add('disabled'); });
+      setTimeout(function() {
+        flashState.currentQuestion++;
+        updateFlashProgress();
+        _showFlashQuestion();
+      }, 1800);
+    }
+  }
+}
+
+function _completeFlashGame() {
+  if (flashState.timerInterval) {
+    clearInterval(flashState.timerInterval);
+    flashState.timerInterval = null;
+  }
+  showScreen('flash-complete');
+  var total = flashState.totalQuestions;
+  var correct = total - flashState.mistakes;
+  var pct = Math.round((correct / total) * 100);
+  var stars = pct >= 100 ? 3 : pct >= 80 ? 2 : pct >= 60 ? 1 : 0;
+  document.getElementById('flash-complete-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+  document.getElementById('flash-complete-title').textContent = stars === 3 ? '记忆大师！🎉' : stars === 2 ? '记性真好！👏' : stars === 1 ? '继续加油！💪' : '再来一次吧！📚';
+  var scoreText = '答对 ' + correct + '/' + total + ' 题';
+  if (flashState.phMode === 'timed') {
+    var elapsed = Math.floor((Date.now() - flashState.startTime) / 1000);
+    var minutes = Math.floor(elapsed / 60);
+    var seconds = elapsed % 60;
+    scoreText += ' · 用时 ' + minutes + '分' + seconds + '秒';
+  }
+  document.getElementById('flash-complete-score').textContent = scoreText;
+  // 错题回顾
+  var wrongDiv = document.getElementById('flash-complete-wrong');
+  var wrongKeys = Object.keys(flashState.wrongMap);
+  if (wrongKeys.length > 0) {
+    var wrongHtml = '<div style="margin-top:14px;font-size:14px;color:#999;text-align:left"><b>错题回顾：</b><br>';
+    wrongKeys.forEach(function(k) {
+      var parts = k.split('|');
+      var wrongContent = parts.slice(1).join('|');
+      wrongHtml += '<span style="color:#666">✗ ' + wrongContent + '</span> （错' + flashState.wrongMap[k] + '次）<br>';
+    });
+    wrongHtml += '</div>';
+    wrongDiv.innerHTML = wrongHtml;
+    wrongDiv.style.display = '';
+  } else {
+    wrongDiv.style.display = 'none';
+  }
+  // 保存错题
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(FLASH_ERRORS_KEY)) || {}; } catch(e) {}
+  Object.keys(flashState.wrongMap).forEach(function(k) {
+    saved[k] = (saved[k] || 0) + flashState.wrongMap[k];
+  });
+  localStorage.setItem(FLASH_ERRORS_KEY, JSON.stringify(saved));
+  // 纸屑
+  spawnConfettiForFlash(pct);
+  setTimeout(function() {
+    speakChinese(stars === 3 ? '太厉害了，记忆大师！' : stars === 2 ? '记性真好！继续加油！' : stars === 1 ? '过关了！多练练会更好的！' : '没关系，再试一次吧！');
+  }, 500);
+}
+
+function spawnConfettiForFlash(pct) {
+  var canvas = document.getElementById('flash-confetti-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width = window.innerWidth;
+  var H = canvas.height = window.innerHeight;
+  var particles = [];
+  var count = pct >= 100 ? 150 : pct >= 80 ? 100 : pct >= 60 ? 60 : 30;
+  var colors = ['#FF7043','#F5A623','#5CB85C','#26A69A','#4A90D9','#7B68EE','#9B59B6','#E040FB','#26C6DA','#00BCD4'];
+  for (var i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * W, y: Math.random() * H * 0.5 - H * 0.1,
+      w: Math.random() * 10 + 4, h: Math.random() * 6 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 2, vy: Math.random() * 3 + 2,
+      rot: Math.random() * 360, rv: (Math.random() - 0.5) * 10
+    });
+  }
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var alive = false;
+    particles.forEach(function(p) {
+      p.x += p.vx; p.y += p.vy; p.rot += p.rv; p.vy += 0.05;
+      if (p.y < H + 20) { alive = true;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
+        ctx.fillStyle = p.color; ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h); ctx.restore();
+      }
+    });
+    if (alive) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, W, H);
+  }
+  requestAnimationFrame(draw);
+}
+
+// 事件委托初始化
+function initFlashListeners() {
+  (function() {
+    document.getElementById('flash-options-grid').addEventListener('click', function(e) {
+      var opt = e.target.closest('.flash-option');
+      if (!opt) return;
+      if (opt.hasAttribute('data-flash-opt')) {
+        _handleFlashOptionClick(parseInt(opt.getAttribute('data-flash-opt')));
+      } else if (opt.hasAttribute('data-flash-order-opt')) {
+        _handleFlashOrderClick(parseInt(opt.getAttribute('data-flash-order-opt')));
+      }
+    });
+  })();
+}
+
 // ==================== 帮助弹窗 ====================
 function showHelp() {
   document.getElementById('help-overlay').classList.add('show');
@@ -21155,10 +22074,11 @@ function clearPhErrors() {
       if (q) speakPhonicsWord(q.word);
     });
   })();
+  initFlashListeners();
   try { const u = new SpeechSynthesisUtterance(''); u.volume = 0; u.rate = 2; speechSynthesis.speak(u); } catch(e) {}
   // 首页底部更新时间（取文件修改时间）
   const el = document.getElementById('update-time');
-  if (el) el.textContent = 'V1.0.3 · 最后更新：2026-05-31 13:10:57';
+  if (el) el.textContent = 'V1.0.4 · 最后更新：2026-07-11 18:00:00';
   // 音色选择器
   function populateVoices() {
     ['en','zh'].forEach(lang => {
@@ -21188,7 +22108,8 @@ function clearPhErrors() {
       <b>V1.0.0</b> 字母认读；数学加减法（100以内）、凑十拆十法；拼音拼读；汉字识字（幼儿园到六年级3500字）。<br><br>
       <b>V1.0.1</b> 数学增加乘除法（九九乘法表）；数学增加计时模式和错题结果展示。<br><br>
       <b>V1.0.2</b> 自然拼读（幼儿园到六年级1000+词汇）教学和小测，支持搜索和拼读规律筛选。<br><br>
-      <b>V1.0.3</b> 自然拼读增加音标学习（48个国际音标），支持音标与单词发音对比学习。
+      <b>V1.0.3</b> 自然拼读增加音标学习（48个国际音标），支持音标与单词发音对比学习。<br><br>
+      <b>V1.0.4</b> 新增闪示训练模块：数字/字母快速闪现，辨识+排序双模式，支持算式运算。
     </div>
   </div>
 </div>
@@ -21222,6 +22143,10 @@ function clearPhErrors() {
       <div class="help-section">
         <div class="help-h">/eɪ/ 自然拼读</div>
         <div class="help-p">幼儿园到六年级 1000+ 词汇。拼读教学按年级学习单词发音和拼读规律，支持收藏；音标学习涵盖 48 个国际音标；小测分得分/计时两种模式。支持搜索和拼读规律筛选。</div>
+      </div>
+      <div class="help-section">
+        <div class="help-h">👁️ 闪示训练</div>
+        <div class="help-p">数字或字母短暂闪现后凭记忆选择。数字模式支持1-6位数字记忆和加减乘除算式运算；字母模式支持1-6个大小写字母。两种游戏模式：记忆（辨识）和排序（按顺序点击）。速度0.05s-3.0s可调。</div>
       </div>
     </div>
   </div>
