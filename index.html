@@ -18569,20 +18569,40 @@ const CHARS = {
     </div>
     <!-- 字母设置 -->
     <div id="flash-letter-settings" style="display:none">
-      <div class="qty-row" style="margin-bottom:6px">
-        <span class="qty-label">字母数量：</span>
-        <button class="qty-btn" onclick="setFlashLetterCount(1)">1</button>
-        <button class="qty-btn" onclick="setFlashLetterCount(2)">2</button>
-        <button class="qty-btn" onclick="setFlashLetterCount(3)">3</button>
-        <button class="qty-btn" onclick="setFlashLetterCount(4)">4</button>
-        <button class="qty-btn" onclick="setFlashLetterCount(5)">5</button>
-        <button class="qty-btn" onclick="setFlashLetterCount(6)">6</button>
+      <div class="math-mode-row" style="margin-bottom:8px">
+        <span class="qty-label">子模式：</span>
+        <button class="tag-btn active" id="flash-lettmode-letter" onclick="setFlashLetterMode('letter')">🔤 字母</button>
+        <button class="tag-btn" id="flash-lettmode-word" onclick="setFlashLetterMode('word')">📖 单词</button>
       </div>
-      <div class="qty-row" style="margin-bottom:8px">
-        <span class="qty-label">大小写：</span>
-        <button class="tag-btn" onclick="setFlashLetterCase('mixed')">Aa 混合</button>
-        <button class="tag-btn" onclick="setFlashLetterCase('upper')">A 大写</button>
-        <button class="tag-btn" onclick="setFlashLetterCase('lower')">a 小写</button>
+      <div id="flash-letter-letter-opts">
+        <div class="qty-row" style="margin-bottom:6px">
+          <span class="qty-label">字母数量：</span>
+          <button class="qty-btn" onclick="setFlashLetterCount(1)">1</button>
+          <button class="qty-btn" onclick="setFlashLetterCount(2)">2</button>
+          <button class="qty-btn" onclick="setFlashLetterCount(3)">3</button>
+          <button class="qty-btn" onclick="setFlashLetterCount(4)">4</button>
+          <button class="qty-btn" onclick="setFlashLetterCount(5)">5</button>
+          <button class="qty-btn" onclick="setFlashLetterCount(6)">6</button>
+        </div>
+        <div class="qty-row" style="margin-bottom:8px">
+          <span class="qty-label">大小写：</span>
+          <button class="tag-btn" onclick="setFlashLetterCase('mixed')">Aa 混合</button>
+          <button class="tag-btn" onclick="setFlashLetterCase('upper')">A 大写</button>
+          <button class="tag-btn" onclick="setFlashLetterCase('lower')">a 小写</button>
+        </div>
+      </div>
+      <div id="flash-letter-word-opts" style="display:none">
+        <div class="qty-row" style="margin-bottom:8px">
+          <span class="qty-label">年级选择：</span>
+          <button class="tag-btn" onclick="setFlashWordGrade('all')">全部</button>
+          <button class="tag-btn" onclick="setFlashWordGrade('K')">幼儿园</button>
+          <button class="tag-btn" onclick="setFlashWordGrade('1')">一年级</button>
+          <button class="tag-btn" onclick="setFlashWordGrade('2')">二年级</button>
+          <button class="tag-btn" onclick="setFlashWordGrade('3')">三年级</button>
+          <button class="tag-btn" onclick="setFlashWordGrade('4')">四年级</button>
+          <button class="tag-btn" onclick="setFlashWordGrade('5')">五年级</button>
+          <button class="tag-btn" onclick="setFlashWordGrade('6')">六年级</button>
+        </div>
       </div>
     </div>
     <!-- 速度 -->
@@ -20777,6 +20797,8 @@ var FLASH_CALC_OP_KEY = 'flash_calc_op';
 var FLASH_CALC_RANGE_KEY = 'flash_calc_range';
 var FLASH_LETTER_COUNT_KEY = 'flash_letter_count';
 var FLASH_LETTER_CASE_KEY = 'flash_letter_case';
+var FLASH_LETTER_MODE_KEY = 'flash_letter_mode';
+var FLASH_WORD_GRADE_KEY = 'flash_word_grade';
 var FLASH_MODE_KEY = 'flash_mode';
 var FLASH_ERRORS_KEY = 'flash_errors';
 
@@ -20789,6 +20811,8 @@ var flashState = {
   calcRange: 10,
   letterCount: 1,
   letterCase: 'mixed',
+  letterMode: 'letter',
+  wordGrade: 'all',
   speed: 500,
   totalQuestions: 10,
   phMode: 'score',
@@ -20812,6 +20836,8 @@ function loadFlashSettings() {
   flashState.calcRange = parseInt(localStorage.getItem(FLASH_CALC_RANGE_KEY)) || 10;
   flashState.letterCount = parseInt(localStorage.getItem(FLASH_LETTER_COUNT_KEY)) || 1;
   flashState.letterCase = localStorage.getItem(FLASH_LETTER_CASE_KEY) || 'mixed';
+  flashState.letterMode = localStorage.getItem(FLASH_LETTER_MODE_KEY) || 'letter';
+  flashState.wordGrade = localStorage.getItem(FLASH_WORD_GRADE_KEY) || 'all';
   flashState.speed = parseInt(localStorage.getItem(FLASH_SPEED_KEY)) || 500;
   flashState.totalQuestions = parseInt(localStorage.getItem(FLASH_QTY_KEY)) || 10;
 }
@@ -20858,13 +20884,33 @@ function updateFlashMapUI() {
   }
   // 字母
   if (flashState.type === 'letter') {
-    document.querySelectorAll('#flash-letter-settings .qty-row:first-child .qty-btn').forEach(function(b) {
-      b.classList.toggle('active', parseInt(b.textContent) === flashState.letterCount);
-    });
-    var caseMap = {'Aa 混合':'mixed','A 大写':'upper','a 小写':'lower'};
-    document.querySelectorAll('#flash-letter-settings .qty-row:last-child .tag-btn').forEach(function(b) {
-      b.classList.toggle('active', caseMap[b.textContent.trim()] === flashState.letterCase);
-    });
+    document.getElementById('flash-lettmode-letter').classList.toggle('active', flashState.letterMode === 'letter');
+    document.getElementById('flash-lettmode-word').classList.toggle('active', flashState.letterMode === 'word');
+    document.getElementById('flash-letter-letter-opts').style.display = flashState.letterMode === 'letter' ? '' : 'none';
+    document.getElementById('flash-letter-word-opts').style.display = flashState.letterMode === 'word' ? '' : 'none';
+    if (flashState.letterMode === 'letter') {
+      document.querySelectorAll('#flash-letter-letter-opts .qty-row:first-child .qty-btn').forEach(function(b) {
+        b.classList.toggle('active', parseInt(b.textContent) === flashState.letterCount);
+      });
+      var caseMap = {'Aa 混合':'mixed','A 大写':'upper','a 小写':'lower'};
+      document.querySelectorAll('#flash-letter-letter-opts .qty-row:last-child .tag-btn').forEach(function(b) {
+        b.classList.toggle('active', caseMap[b.textContent.trim()] === flashState.letterCase);
+      });
+    }
+    if (flashState.letterMode === 'word') {
+      document.querySelectorAll('#flash-letter-word-opts .tag-btn').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('onclick').indexOf("'" + flashState.wordGrade + "'") > -1);
+      });
+    }
+    // 排序模式仅多内容可用
+    var isMulti = (flashState.letterMode === 'letter' && flashState.letterCount > 1) ||
+                  (flashState.letterMode === 'word');
+    document.getElementById('flash-mode-order').style.display = isMulti ? '' : 'none';
+    if (!isMulti && flashState.mode === 'order') {
+      flashState.mode = 'identify';
+      document.getElementById('flash-mode-identify').classList.add('active');
+      document.getElementById('flash-mode-order').classList.remove('active');
+    }
   }
   // 速度滑块
   var speedVal = Math.round(flashState.speed / 50);
@@ -20874,7 +20920,8 @@ function updateFlashMapUI() {
   document.getElementById('flash-mode-identify').classList.toggle('active', flashState.mode === 'identify');
   document.getElementById('flash-mode-order').classList.toggle('active', flashState.mode === 'order');
   var isMulti = (flashState.type === 'digit' && flashState.digitMode === 'memory' && flashState.digitLength > 1) ||
-                (flashState.type === 'letter' && flashState.letterCount > 1);
+                (flashState.type === 'letter' && flashState.letterMode === 'letter' && flashState.letterCount > 1) ||
+                (flashState.type === 'letter' && flashState.letterMode === 'word');
   document.getElementById('flash-mode-order').style.display = isMulti ? '' : 'none';
   if (!isMulti && flashState.mode === 'order') {
     flashState.mode = 'identify';
@@ -20929,6 +20976,18 @@ function setFlashLetterCount(n) {
 function setFlashLetterCase(c) {
   flashState.letterCase = c;
   saveFlashSetting(FLASH_LETTER_CASE_KEY, c);
+  updateFlashMapUI();
+}
+
+function setFlashLetterMode(mode) {
+  flashState.letterMode = mode;
+  saveFlashSetting(FLASH_LETTER_MODE_KEY, mode);
+  updateFlashMapUI();
+}
+
+function setFlashWordGrade(g) {
+  flashState.wordGrade = g;
+  saveFlashSetting(FLASH_WORD_GRADE_KEY, g);
   updateFlashMapUI();
 }
 
@@ -21039,43 +21098,76 @@ function generateFlashQuestions() {
       }
     } else {
       // 字母模式
-      q.type = 'letter';
-      q.count = flashState.letterCount;
-      q.items = [];
-      var pool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      for (var j3 = 0; j3 < flashState.letterCount; j3++) {
-        var ch = pool[Math.floor(Math.random() * 26)];
-        if (flashState.letterCase === 'lower') {
-          ch = ch.toLowerCase();
-        } else if (flashState.letterCase === 'mixed') {
-          ch = Math.random() < 0.5 ? ch : ch.toLowerCase();
-        }
-        q.items.push(ch);
-      }
-      q.display = q.items.join(' ');
-      q.answer = q.display;
-      // 干扰项同样是字母组合
-      var dOptions = new Set();
-      dOptions.add(q.display);
-      while (dOptions.size < 4) {
-        var dItems = [];
-        for (var jj = 0; jj < flashState.letterCount; jj++) {
-          var dc = pool[Math.floor(Math.random() * 26)];
+      if (flashState.letterMode === 'letter') {
+        q.type = 'letter';
+        q.count = flashState.letterCount;
+        q.items = [];
+        var pool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        for (var j3 = 0; j3 < flashState.letterCount; j3++) {
+          var ch = pool[Math.floor(Math.random() * 26)];
           if (flashState.letterCase === 'lower') {
-            dc = dc.toLowerCase();
+            ch = ch.toLowerCase();
           } else if (flashState.letterCase === 'mixed') {
-            dc = Math.random() < 0.5 ? dc : dc.toLowerCase();
+            ch = Math.random() < 0.5 ? ch : ch.toLowerCase();
           }
-          dItems.push(dc);
+          q.items.push(ch);
         }
-        dOptions.add(dItems.join(' '));
+        q.display = q.items.join(' ');
+        q.answer = q.display;
+        // 干扰项同样是字母组合
+        var dOptions = new Set();
+        dOptions.add(q.display);
+        while (dOptions.size < 4) {
+          var dItems = [];
+          for (var jj = 0; jj < flashState.letterCount; jj++) {
+            var dc = pool[Math.floor(Math.random() * 26)];
+            if (flashState.letterCase === 'lower') {
+              dc = dc.toLowerCase();
+            } else if (flashState.letterCase === 'mixed') {
+              dc = Math.random() < 0.5 ? dc : dc.toLowerCase();
+            }
+            dItems.push(dc);
+          }
+          dOptions.add(dItems.join(' '));
+        }
+        q.options = Array.from(dOptions);
+        for (var k3 = q.options.length - 1; k3 > 0; k3--) {
+          var r3 = Math.floor(Math.random() * (k3 + 1));
+          var tmp3 = q.options[k3]; q.options[k3] = q.options[r3]; q.options[r3] = tmp3;
+        }
+        q.correctIdx = q.options.indexOf(q.display);
+      } else {
+        // 单词模式
+        q.type = 'word';
+        q.count = 1;
+        // 按年级筛选词库
+        var wordPool = PHONICS_WORDS;
+        if (flashState.wordGrade !== 'all') {
+          wordPool = PHONICS_WORDS.filter(function(w) { return w.g === flashState.wordGrade; });
+        }
+        if (!wordPool || wordPool.length === 0) { wordPool = PHONICS_WORDS; }
+        var targetWord = wordPool[Math.floor(Math.random() * wordPool.length)];
+        q.word = targetWord;
+        q.display = targetWord.w;
+        q.answer = targetWord.w;
+        q.items = [targetWord.w];
+        // 生成干扰项：从同年级或全词库中随机取不同单词
+        var dOptsWord = new Set();
+        dOptsWord.add(targetWord.w);
+        var srcPool = (flashState.wordGrade !== 'all') ? wordPool : PHONICS_WORDS;
+        var maxTries = 100, t = 0;
+        while (dOptsWord.size < 4 && t < maxTries) {
+          t++;
+          var dw = srcPool[Math.floor(Math.random() * srcPool.length)];
+          if (dw.w !== targetWord.w) dOptsWord.add(dw.w);
+        }
+        q.options = Array.from(dOptsWord);
+        for (var k4 = q.options.length - 1; k4 > 0; k4--) {
+          var r4 = Math.floor(Math.random() * (k4 + 1));
+          var tmp4 = q.options[k4]; q.options[k4] = q.options[r4]; q.options[r4] = tmp4;
+        }
+        q.correctIdx = q.options.indexOf(targetWord.w);
       }
-      q.options = Array.from(dOptions);
-      for (var k3 = q.options.length - 1; k3 > 0; k3--) {
-        var r3 = Math.floor(Math.random() * (k3 + 1));
-        var tmp3 = q.options[k3]; q.options[k3] = q.options[r3]; q.options[r3] = tmp3;
-      }
-      q.correctIdx = q.options.indexOf(q.display);
     }
     qs.push(q);
   }
@@ -21148,7 +21240,7 @@ function _showFlashQuestion() {
   if (contentLen > 10) display.classList.add('smaller');
   else if (contentLen > 5) display.classList.add('smaller');
 
-  if (flashState.mode === 'identify' || q.type === 'digit-calc') {
+  if (flashState.mode === 'identify' || q.type === 'digit-calc' || q.type === 'word') {
     // 辨识模式：闪现内容 → 显示选项
     // Step 1: 准备
     display.innerHTML = '<span class="flash-ready-text">准备…</span>';
@@ -21225,7 +21317,7 @@ function replayFlashContent() {
   optsGrid.innerHTML = '';
 
   var contentLen = q.display.length;
-  if (flashState.mode === 'identify' || q.type === 'digit-calc') {
+  if (flashState.mode === 'identify' || q.type === 'digit-calc' || q.type === 'word') {
     display.innerHTML = '<span class="flash-ready-text">再看一次…</span>';
     display.className = 'flash-display-text visible';
     setTimeout(function() {
