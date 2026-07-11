@@ -20806,10 +20806,10 @@ var flashState = {
   type: 'digit',
   mode: 'identify',
   digitMode: 'memory',
-  digitLength: 1,
+  digitLength: 2,
   calcOp: 'add',
   calcRange: 10,
-  letterCount: 1,
+  letterCount: 2,
   letterCase: 'mixed',
   letterMode: 'letter',
   wordGrade: 'all',
@@ -20831,10 +20831,10 @@ function loadFlashSettings() {
   flashState.type = localStorage.getItem(FLASH_TYPE_KEY) || 'digit';
   flashState.mode = localStorage.getItem(FLASH_MODE_KEY) || 'identify';
   flashState.digitMode = localStorage.getItem(FLASH_DIGIT_MODE_KEY) || 'memory';
-  flashState.digitLength = parseInt(localStorage.getItem(FLASH_DIGIT_LEN_KEY)) || 1;
+  flashState.digitLength = parseInt(localStorage.getItem(FLASH_DIGIT_LEN_KEY)) || 2;
   flashState.calcOp = localStorage.getItem(FLASH_CALC_OP_KEY) || 'add';
   flashState.calcRange = parseInt(localStorage.getItem(FLASH_CALC_RANGE_KEY)) || 10;
-  flashState.letterCount = parseInt(localStorage.getItem(FLASH_LETTER_COUNT_KEY)) || 1;
+  flashState.letterCount = parseInt(localStorage.getItem(FLASH_LETTER_COUNT_KEY)) || 2;
   flashState.letterCase = localStorage.getItem(FLASH_LETTER_CASE_KEY) || 'mixed';
   flashState.letterMode = localStorage.getItem(FLASH_LETTER_MODE_KEY) || 'letter';
   flashState.wordGrade = localStorage.getItem(FLASH_WORD_GRADE_KEY) || 'all';
