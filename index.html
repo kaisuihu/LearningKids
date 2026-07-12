@@ -21268,6 +21268,9 @@ function startFlashGame() {
   flashState.wrongMap = {};
   flashState.orderClicks = 0;
   flashState.orderErrors = 0;
+  // 重置计时器，每次开始从头计时
+  if (flashState.timerInterval) { clearInterval(flashState.timerInterval); flashState.timerInterval = null; }
+  flashState.startTime = 0;
   showScreen('flash-game');
   updateFlashProgress();
   _showFlashQuestion();

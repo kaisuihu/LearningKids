@@ -1,0 +1,6 @@
+https://learningkids.pages.dev/
+
+发布方式：
+1. 更新index.html
+2. 上传到github上（kaisuihu账号）
+3. Cloudflare会自动拉取git内容生成网页。
