@@ -21543,14 +21543,14 @@ function _handleFlashOptionClick(idx) {
     }, 1000);
   } else {
     optEls[idx].classList.add('wrong');
-    if (q.correctIdx >= 0 && q.correctIdx < optEls.length) {
-      optEls[q.correctIdx].classList.add('correct');
-    }
     flashState.mistakes++;
     var wrongKey = q.type + '|' + q.answer;
     if (!flashState.wrongMap[wrongKey]) flashState.wrongMap[wrongKey] = 0;
     flashState.wrongMap[wrongKey]++;
     if (flashState.phMode === 'score') {
+      if (q.correctIdx >= 0 && q.correctIdx < optEls.length) {
+        optEls[q.correctIdx].classList.add('correct');
+      }
       speakChinese('不对。答案是 ' + q.answer + '。');
       setTimeout(function() {
         flashState.currentQuestion++;
@@ -21561,7 +21561,6 @@ function _handleFlashOptionClick(idx) {
       speakChinese('不对哦，再看看。');
       setTimeout(function() {
         optEls.forEach(function(el) { el.classList.remove('disabled'); el.classList.remove('wrong'); });
-        if (q.correctIdx >= 0 && q.correctIdx < optEls.length) optEls[q.correctIdx].classList.remove('correct');
       }, 1500);
     }
   }
