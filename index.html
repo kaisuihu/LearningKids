@@ -18558,6 +18558,8 @@ const CHARS = {
           <button class="qty-btn" onclick="setFlashDigitLen(4)">4</button>
           <button class="qty-btn" onclick="setFlashDigitLen(5)">5</button>
           <button class="qty-btn" onclick="setFlashDigitLen(6)">6</button>
+          <button class="qty-btn" onclick="setFlashDigitLen(7)">7</button>
+          <button class="qty-btn" onclick="setFlashDigitLen(8)">8</button>
         </div>
       </div>
       <div id="flash-digit-calc-opts" style="display:none">
@@ -18618,7 +18620,7 @@ const CHARS = {
     <!-- 速度 -->
     <div class="qty-row" style="margin-bottom:2px">
       <span class="qty-label">闪现速度：</span>
-      <input type="range" id="flash-speed-slider" min="1" max="60" value="10" step="1" oninput="updateFlashSpeed()" style="width:140px;accent-color:#26C6DA">
+      <input type="range" id="flash-speed-slider" min="1" max="61" value="11" step="1" oninput="updateFlashSpeed()" style="width:140px;accent-color:#26C6DA">
       <span class="qty-label" id="flash-speed-text" style="min-width:50px">0.50秒</span>
     </div>
     <!-- 游戏模式 -->
@@ -20929,7 +20931,7 @@ function updateFlashMapUI() {
     }
   }
   // 速度滑块
-  var speedVal = Math.round(flashState.speed / 50);
+  var speedVal = flashIndexFromSpeed(flashState.speed);
   document.getElementById('flash-speed-slider').value = speedVal;
   document.getElementById('flash-speed-text').textContent = (flashState.speed / 1000).toFixed(2) + '秒';
   // 模式
@@ -21016,9 +21018,19 @@ function setFlashWordGrade(g) {
   updateFlashMapUI();
 }
 
+// 速度滑块非匀速映射：index 1 = 20ms，index 2 = 50ms，之后每级 +50ms 至 3000ms
+function flashSpeedFromIndex(i) {
+  if (i <= 1) return 20;
+  return 50 * (i - 1);  // i=2→50, i=3→100 ... i=61→3000
+}
+function flashIndexFromSpeed(ms) {
+  if (ms <= 20) return 1;
+  return Math.round(ms / 50) + 1;  // 50→2, 100→3, 500→11, 3000→61
+}
+
 function updateFlashSpeed() {
   var val = parseInt(document.getElementById('flash-speed-slider').value);
-  flashState.speed = val * 50;
+  flashState.speed = flashSpeedFromIndex(val);
   saveFlashSetting(FLASH_SPEED_KEY, flashState.speed);
   document.getElementById('flash-speed-text').textContent = (flashState.speed / 1000).toFixed(2) + '秒';
 }
@@ -22384,7 +22396,7 @@ function clearPhErrors() {
   try { const u = new SpeechSynthesisUtterance(''); u.volume = 0; u.rate = 2; speechSynthesis.speak(u); } catch(e) {}
   // 首页底部更新时间（取文件修改时间）
   const el = document.getElementById('update-time');
-  if (el) el.textContent = 'V1.0.4 · 最后更新：2026-07-12 10:19:08';
+  if (el) el.textContent = 'V1.0.5 · 最后更新：2026-07-23 17:05:25';
   // 音色选择器
   function populateVoices() {
     ['en','zh'].forEach(lang => {
@@ -22415,7 +22427,8 @@ function clearPhErrors() {
       <b>V1.0.1</b> 数学增加乘除法（九九乘法表）；数学增加计时模式和错题结果展示。<br><br>
       <b>V1.0.2</b> 自然拼读（幼儿园到六年级1000+词汇）教学和小测，支持搜索和拼读规律筛选。<br><br>
       <b>V1.0.3</b> 自然拼读增加音标学习（48个国际音标），支持音标与单词发音对比学习。<br><br>
-      <b>V1.0.4</b> 新增闪示训练模块：数字/字母/单词快速闪现，记忆+排序+填空三模式，支持算式运算。
+      <b>V1.0.4</b> 新增闪示训练模块：数字/字母/单词快速闪现，记忆+排序+填空三模式，支持算式运算。<br><br>
+      <b>V1.0.5</b> 闪示训练：速度下限降至0.02s（滑块非匀步进），数字位数扩展至8位。
     </div>
   </div>
 </div>
