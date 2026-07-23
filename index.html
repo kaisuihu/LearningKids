@@ -596,7 +596,9 @@ body {
 	  transition: opacity 0.15s; opacity: 0;
 	}
 	.flash-display-text.visible { opacity: 1; }
-	.flash-display-text.smaller { font-size: 64px; }
+	.flash-display-text.smaller { font-size: clamp(28px, 7vw, 64px); }
+	#flash-options-grid.flash-grid-2col { grid-template-columns: repeat(2, 1fr); max-width: 400px; }
+	#flash-options-grid.flash-grid-2col .flash-option { font-size: clamp(16px, 4.5vw, 22px); }
 	.flash-ready-text {
 	  font-size: 28px; color: #999; font-weight: 700;
 	}
@@ -21502,6 +21504,7 @@ function replayFlashContent() {
 function _renderFlashOptions(q) {
   var grid = document.getElementById('flash-options-grid');
   grid.innerHTML = '';
+  grid.classList.toggle('flash-grid-2col', String(q.display).length >= 7);
   q.options.forEach(function(opt, idx) {
     var btn = document.createElement('div');
     btn.className = 'flash-option';
@@ -21517,6 +21520,7 @@ function _renderFlashOrderOptions(q) {
   var grid = document.getElementById('flash-options-grid');
   var orderInd = document.getElementById('flash-order-indicator');
   grid.innerHTML = '';
+  grid.classList.toggle('flash-grid-2col', String(q.display).length >= 7);
   // 显示位置指示
   orderInd.style.display = '';
   var posHtml = '';
@@ -22396,7 +22400,7 @@ function clearPhErrors() {
   try { const u = new SpeechSynthesisUtterance(''); u.volume = 0; u.rate = 2; speechSynthesis.speak(u); } catch(e) {}
   // 首页底部更新时间（取文件修改时间）
   const el = document.getElementById('update-time');
-  if (el) el.textContent = 'V1.0.5 · 最后更新：2026-07-23 17:05:25';
+  if (el) el.textContent = 'V1.0.5 · 最后更新：2026-07-23 20:34:48';
   // 音色选择器
   function populateVoices() {
     ['en','zh'].forEach(lang => {
