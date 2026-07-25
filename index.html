@@ -638,6 +638,45 @@ body {
 	.flash-fill-input:focus { border-color: #26C6DA; }
 	.flash-fill-input.correct { border-color: #5CB85C; background: #C8E6C9; color: #2E7D32; }
 	.flash-fill-input.wrong { border-color: #E74C3C; background: #FFCDD2; color: #C62828; animation: shake 0.4s; }
+
+	/* ===== 记忆翻牌 ===== */
+	.mem-grid {
+	  display: grid; gap: 8px; width: 100%; max-width: 480px;
+	  perspective: 800px; margin: 0 auto;
+	}
+	.mem-card {
+	  aspect-ratio: 1; position: relative; cursor: pointer;
+	  transform-style: preserve-3d;
+	  transition: transform 0.5s ease;
+	}
+	.mem-card.flipped { transform: rotateY(180deg); }
+	.mem-card.matched { transform: rotateY(180deg); pointer-events: none; }
+	.mem-card.matched .mem-back { background: #C8E6C9; border-color: #5CB85C; }
+	.mem-card.matched .mem-front-text { color: #2E7D32; }
+	.mem-card.wrong-flip { animation: shake 0.4s; }
+	.mem-card.disabled {
+	  cursor: not-allowed; pointer-events: none;
+	}
+	.mem-card.disabled .mem-front { background: #e0e0e0; border-color: #ccc; }
+	.mem-card.disabled .mem-back { background: #e0e0e0; border-color: #ccc; opacity: 0.4; }
+	.mem-front, .mem-back {
+	  position: absolute; inset: 0; border-radius: 12px; border: 3px solid #e0e0e0;
+	  display: flex; align-items: center; justify-content: center;
+	  backface-visibility: hidden; transition: background 0.3s;
+	}
+	.mem-front {
+	  background: white; transform: rotateY(0deg);
+	}
+	.mem-back {
+	  background: linear-gradient(135deg, #EF5350, #FF7043);
+	  transform: rotateY(180deg); border-color: #EF5350;
+	}
+	
+	.mem-front-text {
+	  font-size: clamp(16px, 4vw, 32px); font-weight: 900; color: #444;
+	}
+	.mem-locked .mem-card:not(.flipped):not(.matched):not(.disabled) { pointer-events: none; }
+
 	@keyframes shake {
 	  0%, 100% { transform: translateX(0); }
 	  25% { transform: translateX(-6px); }
@@ -18263,6 +18302,9 @@ const CHARS = {
       <button class="btn" style="background:linear-gradient(135deg,#26C6DA,#00BCD4)" onclick="showFlashMap()">
         <span>👁️</span> 闪示训练
       </button>
+      <button class="btn" style="background:linear-gradient(135deg,#EF5350,#FF7043)" onclick="showMemoryMap()">
+        <span>🧠</span> 记忆翻牌
+      </button>
     </div>
     <div class="voice-settings" id="voice-settings" style="display:none">
       <span class="voice-label">🎙️ 音色</span>
@@ -18759,7 +18801,78 @@ const CHARS = {
       </div>
     </div>
   </div>
-	
+
+  <!-- ===== Memory Match (记忆翻牌) Map Screen ===== -->
+  <div id="memory-map-screen" class="screen">
+    <div class="map-title">🧠 记忆翻牌</div>
+    <div class="map-subtitle">翻牌配对，练记忆力！</div>
+    <div class="math-mode-row" style="margin-bottom:12px">
+      <span class="qty-label">内容：</span>
+      <button class="tag-btn active" id="mem-type-digit" onclick="setMemType('digit')">🔢 数字</button>
+      <button class="tag-btn" id="mem-type-letter" onclick="setMemType('letter')">🔤 字母</button>
+    </div>
+    <!-- 数字模式设置 -->
+    <div id="mem-digit-settings">
+      <div class="qty-row" style="margin-bottom:8px">
+        <span class="qty-label">数字范围：</span>
+        <button class="tag-btn" onclick="setMemRange(10)">10以内</button>
+        <button class="tag-btn" onclick="setMemRange(20)">20以内</button>
+        <button class="tag-btn" onclick="setMemRange(30)">30以内</button>
+        <button class="tag-btn" onclick="setMemRange(100)">100以内</button>
+      </div>
+    </div>
+    <!-- 字母模式设置 -->
+    <div id="mem-letter-settings" style="display:none">
+      <div class="qty-row" style="margin-bottom:8px">
+        <span class="qty-label">大小写：</span>
+        <button class="tag-btn" onclick="setMemLetterCase('upper')">A 大写</button>
+        <button class="tag-btn" onclick="setMemLetterCase('lower')">a 小写</button>
+        <button class="tag-btn" onclick="setMemLetterCase('mixed')">Aa 混合</button>
+      </div>
+    </div>
+    <!-- 宫格 -->
+    <div class="qty-row" style="margin-bottom:8px" id="mem-grid-row">
+      <span class="qty-label">宫格：</span>
+      <button class="tag-btn" onclick="setMemGrid(2)">2×2</button>
+      <button class="tag-btn" onclick="setMemGrid(3)">3×3</button>
+      <button class="tag-btn" onclick="setMemGrid(4)">4×4</button>
+      <button class="tag-btn" onclick="setMemGrid(5)">5×5</button>
+      <button class="tag-btn" onclick="setMemGrid(6)">6×6</button>
+    </div>
+    <!-- 初始展示 -->
+    <div class="math-mode-row" style="margin-bottom:6px">
+      <span class="qty-label">初始展示：</span>
+      <button class="tag-btn active" id="mem-preview-off" onclick="setMemPreview(false)">关闭</button>
+      <button class="tag-btn" id="mem-preview-on" onclick="setMemPreview(true)">开启 (N秒)</button>
+    </div>
+    <button class="btn btn-endless" onclick="startMemoryGame()" style="margin-top:14px;background:linear-gradient(135deg,#EF5350,#FF7043)">🃏 开始翻牌</button>
+    <br>
+    <button class="btn btn-purple btn-sm" style="margin-top:16px" onclick="showScreen('welcome')">🏠 返回首页</button>
+  </div>
+
+  <!-- ===== Memory Match Game Screen ===== -->
+  <div id="memory-game-screen" class="screen">
+    <div class="game-header">
+      <button class="game-back-btn" onclick="showMemoryMap()">✕ 退出</button>
+      <span class="progress-text" id="mem-status">已消除 0/0 对</span>
+      <span class="math-timer" id="mem-timer">⏱ 0:00</span>
+      <span class="progress-text" id="mem-flip-count">翻牌 0 次</span>
+    </div>
+    <div class="mem-grid" id="mem-grid"></div>
+  </div>
+
+  <!-- ===== Memory Match Complete Screen ===== -->
+  <div id="memory-complete-screen" class="screen">
+    <div class="complete-container" style="text-align:center;margin:0 auto;max-width:500px">
+      <div class="complete-stars" id="mem-complete-stars">⭐⭐⭐</div>
+      <div class="complete-title" id="mem-complete-title">太棒了！</div>
+      <div class="complete-score" id="mem-complete-score"></div>
+      <div class="complete-actions">
+        <button class="btn btn-primary btn-sm" onclick="startMemoryGame()">🔄 再来一次</button>
+        <button class="btn btn-purple btn-sm" onclick="showMemoryMap()">🧠 返回设置</button>
+        <button class="btn btn-blue btn-sm" onclick="showScreen('welcome')">🏠 返回首页</button>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -21824,6 +21937,305 @@ function initFlashListeners() {
   })();
 }
 
+// ==================== 记忆翻牌 ====================
+var MEM_GRID_KEY = 'mem_grid';
+var MEM_TYPE_KEY = 'mem_type';
+var MEM_RANGE_KEY = 'mem_range';
+var MEM_CASE_KEY = 'mem_case';
+var MEM_PREVIEW_KEY = 'mem_preview';
+
+var memState = {
+  type: 'digit',
+  range: 10,
+  letterCase: 'upper',
+  gridN: 2,
+  preview: false,
+  matched: 0,
+  totalPairs: 0,
+  flips: 0,
+  mistakes: 0,
+  startTime: 0,
+  timerInterval: null,
+  firstCard: null,
+  cards: [] // {value, matched, disabled}
+};
+
+function showMemoryMap() {
+  loadMemSettings();
+  showScreen('memory-map');
+  updateMemMapUI();
+}
+
+function loadMemSettings() {
+  memState.gridN = parseInt(localStorage.getItem(MEM_GRID_KEY)) || 2;
+  memState.type = localStorage.getItem(MEM_TYPE_KEY) || 'digit';
+  memState.range = parseInt(localStorage.getItem(MEM_RANGE_KEY)) || 10;
+  memState.letterCase = localStorage.getItem(MEM_CASE_KEY) || 'upper';
+  memState.preview = localStorage.getItem(MEM_PREVIEW_KEY) === 'true';
+}
+
+function saveMemSetting(key, val) { localStorage.setItem(key, val); }
+
+function updateMemMapUI() {
+  document.getElementById('mem-type-digit').classList.toggle('active', memState.type === 'digit');
+  document.getElementById('mem-type-letter').classList.toggle('active', memState.type === 'letter');
+  document.getElementById('mem-digit-settings').style.display = memState.type === 'digit' ? '' : 'none';
+  document.getElementById('mem-letter-settings').style.display = memState.type === 'letter' ? '' : 'none';
+  // 宫格
+  document.querySelectorAll('#mem-grid-row .tag-btn').forEach(function(b) {
+    b.classList.toggle('active', parseInt(b.textContent) === memState.gridN);
+  });
+  // 数字范围
+  document.querySelectorAll('#mem-digit-settings .tag-btn').forEach(function(b) {
+    b.classList.toggle('active', parseInt(b.textContent) === memState.range);
+  });
+  // 大小写
+  var cm = {'A 大写':'upper','a 小写':'lower','Aa 混合':'mixed'};
+  document.querySelectorAll('#mem-letter-settings .tag-btn').forEach(function(b) {
+    b.classList.toggle('active', cm[b.textContent.trim()] === memState.letterCase);
+  });
+  // 初始展示
+  document.getElementById('mem-preview-off').classList.toggle('active', !memState.preview);
+  document.getElementById('mem-preview-on').classList.toggle('active', memState.preview);
+}
+
+function setMemType(t) { memState.type = t; saveMemSetting(MEM_TYPE_KEY, t); updateMemMapUI(); }
+function setMemRange(r) { memState.range = r; saveMemSetting(MEM_RANGE_KEY, r); updateMemMapUI(); }
+function setMemLetterCase(c) { memState.letterCase = c; saveMemSetting(MEM_CASE_KEY, c); updateMemMapUI(); }
+function setMemGrid(n) { memState.gridN = n; saveMemSetting(MEM_GRID_KEY, n); updateMemMapUI(); }
+function setMemPreview(v) { memState.preview = v; saveMemSetting(MEM_PREVIEW_KEY, v); updateMemMapUI(); }
+
+// 生成牌面内容对
+function generateMemPairs() {
+  var N = memState.gridN;
+  var totalCards = N * N;
+  var totalPairs = memState.gridN % 2 === 1 ? (totalCards - 1) / 2 : totalCards / 2;
+  memState.totalPairs = totalPairs;
+
+  // 获取可用元素池
+  var pool = [];
+  if (memState.type === 'digit') {
+    for (var i = 0; i <= memState.range; i++) pool.push(i);
+  } else {
+    var alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    for (var j = 0; j < 26; j++) {
+      var ch = alphabet[j];
+      if (memState.letterCase === 'lower') ch = ch.toLowerCase();
+      else if (memState.letterCase === 'mixed') { pool.push(ch); pool.push(ch.toLowerCase()); continue; }
+      pool.push(ch);
+    }
+  }
+
+  var pairs = [];
+  var used = {};
+  // 如果元素充足，每对唯一
+  if (pool.length >= totalPairs) {
+    // shuffle pool and take first totalPairs
+    for (var k = pool.length - 1; k > 0; k--) { var r = Math.floor(Math.random() * (k + 1)); var t2 = pool[k]; pool[k] = pool[r]; pool[r] = t2; }
+    for (var pi = 0; pi < totalPairs; pi++) {
+      pairs.push(pool[pi], pool[pi]);
+    }
+  } else {
+    // 元素不足，允许重复最多2对
+    var taken = {};
+    for (var qi = 0; qi < totalPairs; qi++) {
+      var cand = pool[Math.floor(Math.random() * pool.length)];
+      var cnt = taken[cand] || 0;
+      if (cnt >= 2) { qi--; continue; }
+      taken[cand] = cnt + 1;
+      pairs.push(cand, cand);
+    }
+  }
+  // 随机打乱
+  for (var si = pairs.length - 1; si > 0; si--) { var ri = Math.floor(Math.random() * (si + 1)); var ti = pairs[si]; pairs[si] = pairs[ri]; pairs[ri] = ti; }
+  return pairs;
+}
+
+function startMemoryGame() {
+  loadMemSettings();
+  memState.matched = 0;
+  memState.flips = 0;
+  memState.mistakes = 0;
+  memState.firstCard = null;
+
+  var N = memState.gridN;
+  var total = N * N;
+  var pairs = generateMemPairs();
+  // 构建 cards 数组
+  memState.cards = [];
+  // 如果是奇数宫格，最后一张放 disabled
+  var cardCount = memState.gridN % 2 === 1 ? total - 1 : total;
+  for (var i = 0; i < cardCount; i++) {
+    memState.cards.push({ value: pairs[i], matched: false, flipped: false, disabled: false });
+  }
+  if (memState.gridN % 2 === 1) {
+    memState.cards.push({ value: null, matched: false, flipped: false, disabled: true });
+  }
+
+  // 重新计时
+  if (memState.timerInterval) { clearInterval(memState.timerInterval); memState.timerInterval = null; }
+  memState.startTime = 0;
+
+  showScreen('memory-game');
+  renderMemGrid();
+  updateMemStatus();
+
+  // 初始展示
+  if (memState.preview) {
+    var grid = document.getElementById('mem-grid');
+    grid.classList.add('mem-locked');
+    var previewSecs = N;
+    setTimeout(function() {
+      var allCards = grid.querySelectorAll('.mem-card:not(.disabled)');
+      allCards.forEach(function(c) { c.classList.add('flipped'); });
+    }, 300);
+    // N秒后盖上，然后开始计时
+    var previewEndDelay = 300 + previewSecs * 1000 + 500;
+    setTimeout(function() {
+      var allCards2 = grid.querySelectorAll('.mem-card:not(.disabled)');
+      allCards2.forEach(function(c) { c.classList.remove('flipped'); });
+      setTimeout(function() {
+        grid.classList.remove('mem-locked');
+      }, 500);
+    }, 300 + previewSecs * 1000);
+    // 展示完成后才开始计时
+    setTimeout(function() { _startMemTimer(); }, previewEndDelay);
+  } else {
+    // 无预览，立即计时
+    _startMemTimer();
+  }
+}
+
+function _startMemTimer() {
+  memState.startTime = Date.now();
+  memState.timerInterval = setInterval(function() {
+    var elapsed = Math.floor((Date.now() - memState.startTime) / 1000);
+    var m = Math.floor(elapsed / 60);
+    var s = elapsed % 60;
+    document.getElementById('mem-timer').textContent = '⏱ ' + m + ':' + (s < 10 ? '0' : '') + s;
+  }, 200);
+}
+
+function renderMemGrid() {
+  var N = memState.gridN;
+  var grid = document.getElementById('mem-grid');
+  grid.innerHTML = '';
+  grid.className = 'mem-grid';
+  grid.style.gridTemplateColumns = 'repeat(' + N + ', 1fr)';
+  grid.style.maxWidth = N >= 5 ? '560px' : '480px';
+
+  memState.cards.forEach(function(card, idx) {
+    var div = document.createElement('div');
+    div.className = 'mem-card';
+    if (card.disabled) div.classList.add('disabled');
+    div.setAttribute('data-mem-idx', idx);
+    div.innerHTML =
+      '<div class="mem-front"><span class="mem-front-text"></span></div>' +
+      '<div class="mem-back"><span style="font-size:clamp(16px,4vw,32px);font-weight:900;color:rgba(255,255,255,0.8)">' + (card.value != null ? card.value : '✕') + '</span></div>';
+    grid.appendChild(div);
+  });
+}
+
+function updateMemStatus() {
+  document.getElementById('mem-status').textContent = '已消除 ' + memState.matched + '/' + memState.totalPairs + ' 对';
+  document.getElementById('mem-flip-count').textContent = '翻牌 ' + memState.flips + ' 次';
+}
+
+function handleMemCardClick(idx) {
+  var card = memState.cards[idx];
+  if (!card) return;
+  if (card.disabled || card.matched || card.flipped) return;
+
+  var grid = document.getElementById('mem-grid');
+  if (grid.classList.contains('mem-locked')) return;
+
+  var el = grid.querySelector('[data-mem-idx="' + idx + '"]');
+  if (!el) return;
+
+  // 翻牌动画
+  card.flipped = true;
+  el.classList.add('flipped');
+  memState.flips++;
+  updateMemStatus();
+
+  if (!memState.firstCard) {
+    // 第一张牌
+    memState.firstCard = { idx: idx, value: card.value };
+  } else {
+    // 第二张牌
+    var first = memState.firstCard;
+    var firstCard = memState.cards[first.idx];
+    var firstEl = grid.querySelector('[data-mem-idx="' + first.idx + '"]');
+
+    if (first.value === card.value) {
+      // 匹配成功！
+      firstCard.matched = true;
+      card.matched = true;
+      memState.matched++;
+      memState.firstCard = null;
+      updateMemStatus();
+      speakChinese('真棒！');
+      // 变色
+      setTimeout(function() {
+        firstEl.classList.add('matched');
+        el.classList.add('matched');
+      }, 400);
+      // 检查胜利
+      if (memState.matched >= memState.totalPairs) {
+        setTimeout(function() { completeMemoryGame(); }, 800);
+      }
+    } else {
+      // 匹配失败
+      memState.mistakes++;
+      memState.firstCard = null;
+      grid.classList.add('mem-locked');
+      // 闪红
+      setTimeout(function() {
+        firstEl.classList.add('wrong-flip');
+        el.classList.add('wrong-flip');
+      }, 400);
+      // 盖上
+      setTimeout(function() {
+        firstCard.flipped = false;
+        card.flipped = false;
+        firstEl.classList.remove('flipped', 'wrong-flip');
+        el.classList.remove('flipped', 'wrong-flip');
+        grid.classList.remove('mem-locked');
+      }, 1200);
+    }
+  }
+}
+
+function completeMemoryGame() {
+  if (memState.timerInterval) { clearInterval(memState.timerInterval); memState.timerInterval = null; }
+  var elapsed = Math.floor((Date.now() - memState.startTime) / 1000);
+  var m = Math.floor(elapsed / 60);
+  var s = elapsed % 60;
+  var timeStr = '用时 ' + m + '分' + (s < 10 ? '0' : '') + s + '秒';
+
+  // 星级：按错误次数/总对数的比例
+  var errRate = memState.mistakes / Math.max(1, memState.totalPairs);
+  var stars = errRate <= 0 ? 3 : errRate <= 0.5 ? 2 : errRate <= 1 ? 1 : 0;
+
+  document.getElementById('mem-complete-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+  document.getElementById('mem-complete-title').textContent = stars === 3 ? '记忆大师！🎉' : stars === 2 ? '非常棒！👏' : stars === 1 ? '继续加油！💪' : '再来一次吧！📚';
+  document.getElementById('mem-complete-score').textContent = timeStr + ' · 翻牌 ' + memState.flips + ' 次 · 错误 ' + memState.mistakes + ' 次';
+  showScreen('memory-complete');
+  setTimeout(function() {
+    speakChinese(stars === 3 ? '太厉害了，全记住了！' : stars === 2 ? '非常棒，记得很好！' : stars === 1 ? '过关了，继续练习吧！' : '没关系，再试试看！');
+  }, 500);
+}
+
+// 事件委托
+(function() {
+  document.getElementById('mem-grid').addEventListener('click', function(e) {
+    var card = e.target.closest('.mem-card');
+    if (!card) return;
+    var idx = card.getAttribute('data-mem-idx');
+    if (idx != null) handleMemCardClick(parseInt(idx));
+  });
+})();
+
 // ==================== 帮助弹窗 ====================
 function showHelp() {
   document.getElementById('help-overlay').classList.add('show');
@@ -22400,7 +22812,7 @@ function clearPhErrors() {
   try { const u = new SpeechSynthesisUtterance(''); u.volume = 0; u.rate = 2; speechSynthesis.speak(u); } catch(e) {}
   // 首页底部更新时间（取文件修改时间）
   const el = document.getElementById('update-time');
-  if (el) el.textContent = 'V1.0.5 · 最后更新：2026-07-23 20:34:48';
+  if (el) el.textContent = 'V1.1.0 · 最后更新：2026-07-26 00:18:08';
   // 音色选择器
   function populateVoices() {
     ['en','zh'].forEach(lang => {
@@ -22432,7 +22844,8 @@ function clearPhErrors() {
       <b>V1.0.2</b> 自然拼读（幼儿园到六年级1000+词汇）教学和小测，支持搜索和拼读规律筛选。<br><br>
       <b>V1.0.3</b> 自然拼读增加音标学习（48个国际音标），支持音标与单词发音对比学习。<br><br>
       <b>V1.0.4</b> 新增闪示训练模块：数字/字母/单词快速闪现，记忆+排序+填空三模式，支持算式运算。<br><br>
-      <b>V1.0.5</b> 闪示训练：速度下限降至0.02s（滑块非匀步进），数字位数扩展至8位。
+      <b>V1.0.5</b> 闪示训练：速度下限降至0.02s（滑块非匀步进），数字位数扩展至8位。<br><br>
+      <b>V1.1.0</b> 新增记忆翻牌：2~6宫格数字/字母配对，初始展示 + 翻牌计时 + 3D翻转动画。新增7大模块。
     </div>
   </div>
 </div>
