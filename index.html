@@ -22812,7 +22812,7 @@ function clearPhErrors() {
   try { const u = new SpeechSynthesisUtterance(''); u.volume = 0; u.rate = 2; speechSynthesis.speak(u); } catch(e) {}
   // 首页底部更新时间（取文件修改时间）
   const el = document.getElementById('update-time');
-  if (el) el.textContent = 'V1.1.0 · 最后更新：2026-07-26 00:18:08';
+  if (el) el.textContent = 'V1.0.6 · 最后更新：2026-07-26 00:18:08';
   // 音色选择器
   function populateVoices() {
     ['en','zh'].forEach(lang => {
@@ -22845,7 +22845,7 @@ function clearPhErrors() {
       <b>V1.0.3</b> 自然拼读增加音标学习（48个国际音标），支持音标与单词发音对比学习。<br><br>
       <b>V1.0.4</b> 新增闪示训练模块：数字/字母/单词快速闪现，记忆+排序+填空三模式，支持算式运算。<br><br>
       <b>V1.0.5</b> 闪示训练：速度下限降至0.02s（滑块非匀步进），数字位数扩展至8位。<br><br>
-      <b>V1.1.0</b> 新增记忆翻牌：2~6宫格数字/字母配对，初始展示 + 翻牌计时 + 3D翻转动画。新增7大模块。
+      <b>V1.0.6</b> 新增记忆翻牌：2~6宫格数字/字母配对，初始展示 + 翻牌计时 + 3D翻转动画。新增7大模块。
     </div>
   </div>
 </div>
